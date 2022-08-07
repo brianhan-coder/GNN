@@ -1,0 +1,4 @@
+AA_charge: -1 (negative) / 1 (positive)
+AA_polar: 0 (not polar) / 1 (polar)
+AA_hydrophobic: -1 (hydrophilic) / 1 (AA_hydrophobic)
+AA_rigidity: 0 (rigid) / 1 (flexible) https://onlinelibrary.wiley.com/doi/epdf/10.1002/anie.200250684
