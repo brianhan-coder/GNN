@@ -20,7 +20,7 @@ class FeatureData:
             feature_list.append(item)
         self.features[feature_name]=Convert(feature_list)
     
-    def buildProtein(self,*sequence):
+    def buildProtein(self,sequence):
         result = []
         AminoAcid = namedtuple("AminoAcid", self.features.keys())
         #print(self.features)

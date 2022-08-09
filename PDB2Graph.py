@@ -32,8 +32,8 @@ def edges(pdb_id):
         residue_target=str(edge[1][:-3])
         node_start=res2node[residue_start]
         node_target=res2node[residue_target]
-        start_aa.append(node_start)
-        target_aa.append(node_target)
+        start_aa.append(int(node_start))
+        target_aa.append(int(node_target))
 
     result_edges=[start_aa,target_aa]
     return result_edges
