@@ -10,23 +10,23 @@ from biopandas.pdb import PandasPdb
 #pdb_file = pypdb.get_pdb_file('2viu', filetype='cif', compression=False)
 
 
-def number_of_nodes(pdb_id):
-    G = read_pdb('pdb_library/'+str(pdb_id)+'.pdb')
+def number_of_nodes(pdb_path,pdb_id):
+    G = read_pdb(str(pdb_path)+'/'+str(pdb_id)+'.pdb')
     return G.number_of_nodes()
 
-def number_of_edges(pdb_id):
-    G = read_pdb('pdb_library/'+str(pdb_id)+'.pdb')
+def number_of_edges(pdb_path,pdb_id):
+    G = read_pdb(str(pdb_path)+'/'+str(pdb_id)+'.pdb')
     return G.number_of_edges()
 
-def edges(pdb_id):
-    path='pdb_library/'+str(pdb_id)+'.pdb'
+def edges(pdb_path,pdb_id):
+    path=str(pdb_path)+'/'+str(pdb_id)+'.pdb'
     G = read_pdb(path)
-    res2node=residueID2nodeID(pdb_id)
+    res2node=residueID2nodeID(pdb_path,pdb_id)
 
     start_aa=[]
     target_aa=[]
 
-
+    index=0
     for edge in G.edges():
         residue_start=str(edge[0][:-3])
         residue_target=str(edge[1][:-3])
@@ -34,12 +34,11 @@ def edges(pdb_id):
         node_target=res2node[residue_target]
         start_aa.append(int(node_start))
         target_aa.append(int(node_target))
-
     result_edges=[start_aa,target_aa]
     return result_edges
 
-def residueID2nodeID(pdb_id):
-    path='pdb_library/'+str(pdb_id)+'.pdb'
+def residueID2nodeID(pdb_path,pdb_id):
+    path=str(pdb_path)+'/'+str(pdb_id)+'.pdb'
     pdb_df=pdb2df(path)
     #atomic_df = PandasPdb().read_pdb(str(path)).df["ATOM"]
     chain_pos_aa=compute_chain_pos_aa_mapping(pdb_df)
@@ -53,9 +52,9 @@ def residueID2nodeID(pdb_id):
             node_index+=1
     return residue2node
 
-def nodes(pdb_id):
-    path='pdb_library/'+str(pdb_id)+'.pdb'
-    res2node=residueID2nodeID(pdb_id)
+def nodes(pdb_path,pdb_id):
+    path=str(pdb_path)+'/'+str(pdb_id)+'.pdb'
+    res2node=residueID2nodeID(pdb_path,pdb_id)
     G = read_pdb(path)
     sequence=['N']*G.number_of_nodes()
     for node in G.nodes():
@@ -66,3 +65,12 @@ def nodes(pdb_id):
         sequence[int(nodeID)]=aa_name
 
     return sequence
+
+
+def edge_feature(pdb_path,pdb_id):
+    path=str(pdb_path)+'/'+str(pdb_id)+'.pdb'
+    G = read_pdb(path)
+    edge_type=[]
+    for _,_,d in G.edges(data=True):
+        edge_type.append(d['kind'])
+    return edge_type
