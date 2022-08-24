@@ -4,7 +4,8 @@ from torch_geometric.nn import GCNConv
 from torch_geometric.nn import global_mean_pool
 import torch
 from torch_geometric.nn import GraphConv
-
+import random
+import numpy as np
 
 class GNN(torch.nn.Module):
     def __init__(self, hidden_channels,num_node_features,num_classes):
@@ -74,3 +75,42 @@ def test(model,loader):
          pred = out.argmax(dim=1)  # Use the class with highest probability.
          correct += int((pred == data.y).sum())  # Check against ground-truth labels.
      return correct / len(loader.dataset)  # Derive ratio of correct predictions.
+
+
+def get_info_dataset(dataset, verbose=False):
+    """Determines the number of inputs labeled one and zero in a dataset."""
+    zeros = 0
+    ones = 0
+    for data in dataset:
+        label = data.y.item()
+        if label == 0:
+            zeros+=1
+        elif label ==1:
+            ones+=1
+    if verbose:
+        print(f'In this dataset, there are {zeros} inputs labeled "0" and {ones} inputs labeled "1".')
+    return (ones, zeros)
+
+def balance_dataset(dataset):
+    ones, zeros = get_info_dataset(dataset)
+    if zeros==ones:
+        return dataset
+    if zeros>ones:
+        major=zeros
+        minor=ones
+        the_major_one=0
+    else:
+        major=ones
+        minor=zeros
+        the_major_one=1
+
+    ratio = float((major-minor)/(major))
+    balanced = []
+    for item in dataset:
+        label = item.y.item()
+        if label == the_major_one:
+            if random.random()>ratio:
+                balanced.append(item)
+        else:
+            balanced.append(item)
+    return balanced

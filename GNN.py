@@ -55,7 +55,6 @@ tmp = list(zip(proteins, graph_labels))
 random.shuffle(tmp)
 proteins, graph_labels = zip(*tmp)
 proteins, graph_labels = list(proteins), list(graph_labels)
-
 if partition_size != 'max':
     proteins=proteins[:int(partition_size)]
     graph_labels=graph_labels[:int(partition_size)]
@@ -84,10 +83,13 @@ for protein_index,my_protein in enumerate(proteins):
             my_label=torch.tensor(graph_labels[protein_index], dtype=torch.long)
             g = Data(x=nodes_features, edge_index=edge_index,y=my_label)
             graph_dataset.append(g)
+            print(graph_labels[protein_index])
         except KeyError:
             continue
 ### train test partition
 
+graph_dataset=GNN_core.balance_dataset(graph_dataset)
+GNN_core.get_info_dataset(graph_dataset,verbose=True)
 train_test_partition=int(partition_ratio*len(graph_dataset))
 train_dataset = graph_dataset[:train_test_partition]
 test_dataset = graph_dataset[train_test_partition:]
@@ -108,7 +110,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 criterion = torch.nn.CrossEntropyLoss()
 
 ### training
-for epoch in range(1, n_epochs):
+for epoch in range(1, int(n_epochs)):
     GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion)
     train_acc = GNN_core.test(model=model,loader=train_loader)
     test_acc = GNN_core.test(model=model,loader=test_loader)
