@@ -20,12 +20,13 @@ parser.add_argument('-d','--dataset', required=True, help='the protein dataset')
 parser.add_argument('--pdb_path', required=True, help='path to the pdb files')
 parser.add_argument('-r','--training_ratio', required=False, help='path to the pdb files',default=0.7)
 parser.add_argument('--partition_size', required=False, help='sets partition size for the total size of dataset', default='max')
-
+parser.add_argument('-e','--epochs', required=False, help='number of training epochs', default='10')
 args = parser.parse_args()
 protein_dataset=args.dataset
 pdb_path=args.pdb_path
 partition_ratio=args.training_ratio
 partition_size=args.partition_size
+n_epochs=args.epochs
 if partition_size != 'max':
     parition_size = int(partition_size)
 
@@ -107,7 +108,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 criterion = torch.nn.CrossEntropyLoss()
 
 ### training
-for epoch in range(1, 5):
+for epoch in range(1, n_epochs):
     GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion)
     train_acc = GNN_core.test(model=model,loader=train_loader)
     test_acc = GNN_core.test(model=model,loader=test_loader)
