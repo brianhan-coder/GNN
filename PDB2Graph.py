@@ -7,8 +7,6 @@ from biopandas.pdb import PandasPdb
 ## proteingraph version "0.3.0"
 
 
-#pdb_file = pypdb.get_pdb_file('2viu', filetype='cif', compression=False)
-
 
 def number_of_nodes(pdb_path,pdb_id):
     G = read_pdb(str(pdb_path)+'/'+str(pdb_id)+'.pdb')

@@ -23,9 +23,8 @@ class FeatureData:
     def buildProtein(self,sequence):
         result = []
         AminoAcid = namedtuple("AminoAcid", self.features.keys())
-        #print(self.features)
         for aminoAcid in sequence:
-            tmp={feature:feature_dict[aminoAcid] for feature, feature_dict in self.features.items()}
+            tmp={str(feature):str(feature_dict[aminoAcid]) for feature, feature_dict in self.features.items()}
             acid=AminoAcid(**tmp)
             result.append(acid)
         return result
