@@ -5,7 +5,7 @@ from IPython.display import HTML
 import pypdb 
 from biopandas.pdb import PandasPdb
 ## proteingraph version "0.3.0"
-
+import time
 
 
 def number_of_nodes(pdb_path,pdb_id):
@@ -61,7 +61,6 @@ def nodes(pdb_path,pdb_id):
         aa_name=str(node[-3:])
         nodeID=res2node[residueID]
         sequence[int(nodeID)]=aa_name
-
     return sequence
 
 

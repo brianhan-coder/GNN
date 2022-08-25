@@ -6,6 +6,9 @@ import torch
 from torch_geometric.nn import GraphConv
 import random
 import numpy as np
+from os.path import exists
+import PDB2Graph
+from torch_geometric.data import Data
 
 class GNN(torch.nn.Module):
     def __init__(self, hidden_channels,num_node_features,num_classes):
@@ -114,3 +117,39 @@ def balance_dataset(dataset):
         else:
             balanced.append(item)
     return balanced
+
+
+def convert_pdb2graph(input):
+ 
+    pdb_path=input[0]
+    my_protein=input[1]
+    featureData=input[2]
+    graph_labels=input[3]
+    protein_index=input[4]
+    if exists(str(pdb_path)+'/'+str(my_protein)+'.pdb'):
+        try:
+            nodes=PDB2Graph.nodes(pdb_path,my_protein)
+            edges=PDB2Graph.edges(pdb_path,my_protein)
+            print("Loaded ",str(my_protein))
+        except (IndexError, ValueError):
+            print("Can't load ",str(my_protein))
+            return
+
+        
+    ### readin feature list of all amino acids
+        try:
+            complete_list_feature=[]
+            for aminoAcid in featureData.buildProtein(nodes):
+                my_features=[float(tmp) for tmp in list(aminoAcid)]
+                complete_list_feature.append(my_features)
+
+            nodes_features=torch.tensor(complete_list_feature,dtype=torch.float) # feature vector of all nodes
+            edge_index = torch.tensor(edges, dtype=torch.long) # edges, 1st list: index of the source nodes, 2nd list: index of target nodes.
+            my_label=torch.tensor(graph_labels[protein_index], dtype=torch.long)
+            g = Data(x=nodes_features, edge_index=edge_index,y=my_label)
+
+            return g
+        except KeyError:
+            print("Failed loading aminoacids info for ",str(my_protein))
+            return
+
