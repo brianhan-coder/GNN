@@ -38,13 +38,15 @@ gnn_layer_by_name = {"GCN": geom_nn.GCNConv, "GAT": geom_nn.GATConv, "GraphConv"
 ### loading features
 
 featureData = feature_embedding.FeatureData()
-featureData.readFeatureFile("AA_features/AA_vanderWaalsVolume.dat","vdWVolume")
-featureData.readFeatureFile("AA_features/AA_GraphShapeIndex.dat","shape")
+#featureData.readFeatureFile("AA_features/AA_vanderWaalsVolume.dat","vdWVolume")
+#featureData.readFeatureFile("AA_features/AA_GraphShapeIndex.dat","shape")
+#featureData.readFeatureFile("AA_features/AA_NHydrogenBondDonors.dat","N_HBond")
+#featureData.readFeatureFile("AA_features/AA_MolecularMass.dat","mass")
 featureData.readFeatureFile("AA_features/AA_polarity.dat","polarity")
 featureData.readFeatureFile("AA_features/AA_hydrophobicity.dat","hydrophobicity")
-featureData.readFeatureFile("AA_features/AA_NHydrogenBondDonors.dat","N_HBond")
-featureData.readFeatureFile("AA_features/AA_MolecularMass.dat","mass")
-
+featureData.readFeatureFile("AA_features/AA_flexibility.dat","flexibility")
+featureData.readFeatureFile("AA_features/AA_IDP_Scale.dat","IDP_scale")
+featureData.readFeatureFile("AA_features/AA_charge.dat","charge")
 ### load proteins
 
 proteins=[]
@@ -65,7 +67,7 @@ if partition_size != 'max':
     graph_labels=graph_labels[:int(partition_size)]
 
 
-
+proteins[0]='2QAG'
 if __name__ == '__main__':
     ### parallel converting PDB to graphs 
     input_list=[]

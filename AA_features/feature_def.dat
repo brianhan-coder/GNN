@@ -1,6 +1,6 @@
-AA_polarity: Amino Acid Difference Formula to Help Explain Protein Evolution
-AA_hydrophobic: https://doi.org/10.1111/j.1399-3011.1988.tb01261.x
-AA_rigidity: 
+AA_polarity:  Science 185:862-864(1974). https://web.expasy.org/protscale/pscale/PolarityGrantham.html
+AA_hydrophobic: KD-scale. https://www.cgl.ucsf.edu/chimera/docs/UsersGuide/midas/hydrophob.html
+AA_flexibility: Int. J. Pept. Protein. Res. 32:242-255(1988). https://web.expasy.org/protscale/pscale/Averageflexibility.html 
 AA_Molecular_mass: https://en.wikipedia.org/wiki/Amino_acid#Isomerism
 AA_Molecular_volume: Amino Acid Difference Formula to Help Explain Protein Evolution
 AA_composition: Amino Acid Difference Formula to Help Explain Protein Evolution
@@ -9,3 +9,7 @@ AA_vanderWaalsVolume: https://doi.org/10.1111/j.1399-3011.1988.tb01261.x
 AA_graph_shape_index: https://doi.org/10.1111/j.1399-3011.1988.tb01261.x
 AA_NHydrogenBondDonors: https://doi.org/10.1111/j.1399-3011.1988.tb01261.x
 AA_charge: -1(negative charged) 1 (positive charged): https://doi.org/10.1111/j.1399-3011.1988.tb01261.x
+AA_IDP_Scale: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2676888/pdf/nihms-105641.pdf
+
+
+see also https://web.expasy.org/protscale/

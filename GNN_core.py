@@ -9,6 +9,9 @@ import numpy as np
 from os.path import exists
 import PDB2Graph
 from torch_geometric.data import Data
+from proteingraph.pin import pdb2df
+from proteingraph import read_pdb
+import GNN_core
 
 class GNN(torch.nn.Module):
     def __init__(self, hidden_channels,num_node_features,num_classes):
@@ -126,10 +129,19 @@ def convert_pdb2graph(input):
     featureData=input[2]
     graph_labels=input[3]
     protein_index=input[4]
-    if exists(str(pdb_path)+'/'+str(my_protein)+'.pdb'):
+    path=str(pdb_path)+'/'+str(my_protein)+'.pdb'
+    if exists(path):
         try:
-            nodes=PDB2Graph.nodes(pdb_path,my_protein)
-            edges=PDB2Graph.edges(pdb_path,my_protein)
+            pdb_df=pdb2df(path)
+            res2node=PDB2Graph.residueID2nodeID(pdb_df)
+            G=read_pdb(str(pdb_path)+'/'+str(my_protein)+'.pdb')
+            PDB2Graph.add_pi_pi_interactions(G,pdb_df)
+
+            node=PDB2Graph.node(G,res2node)
+            edge=PDB2Graph.edge(G,res2node)
+            for item in PDB2Graph.edge_feature(G):
+                print(item)
+            #print(G.edges(data=True))
             print("Loaded ",str(my_protein))
         except (IndexError, ValueError):
             print("Can't load ",str(my_protein))
@@ -139,12 +151,12 @@ def convert_pdb2graph(input):
     ### readin feature list of all amino acids
         try:
             complete_list_feature=[]
-            for aminoAcid in featureData.buildProtein(nodes):
+            for aminoAcid in featureData.buildProtein(node):
                 my_features=[float(tmp) for tmp in list(aminoAcid)]
                 complete_list_feature.append(my_features)
 
             nodes_features=torch.tensor(complete_list_feature,dtype=torch.float) # feature vector of all nodes
-            edge_index = torch.tensor(edges, dtype=torch.long) # edges, 1st list: index of the source nodes, 2nd list: index of target nodes.
+            edge_index = torch.tensor(edge, dtype=torch.long) # edges, 1st list: index of the source nodes, 2nd list: index of target nodes.
             my_label=torch.tensor(graph_labels[protein_index], dtype=torch.long)
             g = Data(x=nodes_features, edge_index=edge_index,y=my_label)
 
