@@ -139,9 +139,6 @@ def convert_pdb2graph(input):
 
             node=PDB2Graph.node(G,res2node)
             edge=PDB2Graph.edge(G,res2node)
-            for item in PDB2Graph.edge_feature(G):
-                print(item)
-            #print(G.edges(data=True))
             print("Loaded ",str(my_protein))
         except (IndexError, ValueError):
             print("Can't load ",str(my_protein))

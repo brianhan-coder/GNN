@@ -67,7 +67,6 @@ if partition_size != 'max':
     graph_labels=graph_labels[:int(partition_size)]
 
 
-proteins[0]='2QAG'
 if __name__ == '__main__':
     ### parallel converting PDB to graphs 
     input_list=[]
@@ -79,7 +78,7 @@ if __name__ == '__main__':
     pool.close()
     pool.join()
     graph_dataset = list(filter(lambda item: item is not None, graph_dataset))
-
+    #print(graph_dataset[0].edge_attr)
 
     ### train test partition
     graph_dataset=GNN_core.balance_dataset(graph_dataset)
@@ -93,14 +92,14 @@ if __name__ == '__main__':
     ### mini-batching of graphs, adjacency matrices are stacked in a diagonal fashion. Batching multiple graphs into a single giant graph
 
     from torch_geometric.loader import DataLoader
-    train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
     ### core GNN 
     num_node_features=len(graph_dataset[0].x[0])
     num_classes=2
     model = GNN_core.GCN(hidden_channels=64,num_node_features=num_node_features,num_classes=num_classes)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.05)
     criterion = torch.nn.CrossEntropyLoss()
     ### training
     for epoch in range(1, int(n_epochs)):
