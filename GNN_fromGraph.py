@@ -20,13 +20,13 @@ import multiprocessing
 
 parser = argparse.ArgumentParser(description="Simulate a GNN with the appropriate hyperparameters.")
 parser.add_argument('-d','--dataset', required=True, help='the protein dataset')
-parser.add_argument('--pdb_path', required=True, help='path to the pdb files')
+parser.add_argument('--graph_path', required=True, help='path to the graph files')
 parser.add_argument('-r','--training_ratio', required=False, help='path to the pdb files',default=0.7)
 parser.add_argument('--partition_size', required=False, help='sets partition size for the total size of dataset', default='max')
 parser.add_argument('-e','--epochs', required=False, help='number of training epochs', default='10')
 args = parser.parse_args()
 protein_dataset=args.dataset
-pdb_path=args.pdb_path
+pdb_path=args.graph_path
 partition_ratio=args.training_ratio
 partition_size=args.partition_size
 n_epochs=args.epochs
@@ -35,18 +35,7 @@ if partition_size != 'max':
 
 gnn_layer_by_name = {"GCN": geom_nn.GCNConv, "GAT": geom_nn.GATConv, "GraphConv": geom_nn.GraphConv}
 
-### loading features
 
-featureData = feature_embedding.FeatureData()
-#featureData.readFeatureFile("AA_features/AA_vanderWaalsVolume.dat","vdWVolume")
-#featureData.readFeatureFile("AA_features/AA_GraphShapeIndex.dat","shape")
-#featureData.readFeatureFile("AA_features/AA_NHydrogenBondDonors.dat","N_HBond")
-#featureData.readFeatureFile("AA_features/AA_MolecularMass.dat","mass")
-featureData.readFeatureFile("AA_features/AA_polarity.dat","polarity")
-featureData.readFeatureFile("AA_features/AA_hydrophobicity.dat","hydrophobicity")
-featureData.readFeatureFile("AA_features/AA_flexibility.dat","flexibility")
-featureData.readFeatureFile("AA_features/AA_IDP_Scale.dat","IDP_scale")
-featureData.readFeatureFile("AA_features/AA_charge.dat","charge")
 ### load proteins
 
 proteins=[]
@@ -69,16 +58,11 @@ if partition_size != 'max':
 
 if __name__ == '__main__':
     ### parallel converting PDB to graphs 
-    input_list=[]
+    graph_dataset=[]
     for protein_index,my_protein in enumerate(proteins):
-        input_list.append([pdb_path,my_protein,featureData,graph_labels,protein_index])
-
-    pool=multiprocessing.Pool()
-    print('number of workers: ',pool._processes)
-    graph_dataset=pool.map(GNN_core.convert_pdb2graph,input_list)
-    pool.close()
-    pool.join()
-    graph_dataset = list(filter(lambda item: item is not None, graph_dataset))
+        if os.path.exists("graph_base/graph100_PDB/"+str(my_protein)+".nx"):
+            G = nx.read_gpickle("graph_base/graph100_PDB/"+str(my_protein)+".nx")
+            graph_dataset.append(G)
     #print(graph_dataset[0].edge_attr)
 
     ### train test partition

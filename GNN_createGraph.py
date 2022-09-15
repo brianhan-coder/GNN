@@ -38,10 +38,6 @@ gnn_layer_by_name = {"GCN": geom_nn.GCNConv, "GAT": geom_nn.GATConv, "GraphConv"
 ### loading features
 
 featureData = feature_embedding.FeatureData()
-#featureData.readFeatureFile("AA_features/AA_vanderWaalsVolume.dat","vdWVolume")
-#featureData.readFeatureFile("AA_features/AA_GraphShapeIndex.dat","shape")
-#featureData.readFeatureFile("AA_features/AA_NHydrogenBondDonors.dat","N_HBond")
-#featureData.readFeatureFile("AA_features/AA_MolecularMass.dat","mass")
 featureData.readFeatureFile("AA_features/AA_polarity.dat","polarity")
 featureData.readFeatureFile("AA_features/AA_hydrophobicity.dat","hydrophobicity")
 featureData.readFeatureFile("AA_features/AA_flexibility.dat","flexibility")
@@ -68,43 +64,10 @@ if partition_size != 'max':
 
 
 if __name__ == '__main__':
-    ### parallel converting PDB to graphs 
-    input_list=[]
+    ### parallel converting PDB to graphs
     for protein_index,my_protein in enumerate(proteins):
-        input_list.append([pdb_path,my_protein,featureData,graph_labels,protein_index])
+        input_list=[pdb_path,my_protein,featureData,graph_labels,protein_index]
 
-    pool=multiprocessing.Pool()
-    print('number of workers: ',pool._processes)
-    graph_dataset=pool.map(GNN_core.convert_pdb2graph,input_list)
-    pool.close()
-    pool.join()
-    graph_dataset = list(filter(lambda item: item is not None, graph_dataset))
-    #print(graph_dataset[0].edge_attr)
-
-    ### train test partition
-    graph_dataset=GNN_core.balance_dataset(graph_dataset)
-    GNN_core.get_info_dataset(graph_dataset,verbose=True)
-    train_test_partition=int(partition_ratio*len(graph_dataset))
-    train_dataset = graph_dataset[:train_test_partition]
-    test_dataset = graph_dataset[train_test_partition:]
-    print(f'Number of training graphs: {len(train_dataset)}')
-    print(f'Number of test graphs: {len(test_dataset)}')
-
-    ### mini-batching of graphs, adjacency matrices are stacked in a diagonal fashion. Batching multiple graphs into a single giant graph
-
-    from torch_geometric.loader import DataLoader
-    train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=True)
-
-    ### core GNN 
-    num_node_features=len(graph_dataset[0].x[0])
-    num_classes=2
-    model = GNN_core.GCN(hidden_channels=64,num_node_features=num_node_features,num_classes=num_classes)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.05)
-    criterion = torch.nn.CrossEntropyLoss()
-    ### training
-    for epoch in range(1, int(n_epochs)):
-        GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion)
-        train_acc = GNN_core.test(model=model,loader=train_loader)
-        test_acc = GNN_core.test(model=model,loader=test_loader)
-        print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
+        G=GNN_core.convert_pdb2graph(input_list)
+        if G!=None:
+            nx.write_gpickle(G, "graph_base/graph100_PDB/"+str(my_protein)+".nx")
