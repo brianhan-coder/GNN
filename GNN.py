@@ -74,6 +74,7 @@ if __name__ == '__main__':
         input_list.append([pdb_path,my_protein,featureData,graph_labels,protein_index])
 
     pool=multiprocessing.Pool()
+    print('number of workers: ',pool._processes)
     graph_dataset=pool.map(GNN_core.convert_pdb2graph,input_list)
     pool.close()
     pool.join()
