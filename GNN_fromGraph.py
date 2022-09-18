@@ -60,8 +60,8 @@ if __name__ == '__main__':
     ### parallel converting PDB to graphs 
     graph_dataset=[]
     for protein_index,my_protein in enumerate(proteins):
-        if os.path.exists("graph_base/graph100_PDB/"+str(my_protein)+".nx"):
-            G = nx.read_gpickle("graph_base/graph100_PDB/"+str(my_protein)+".nx")
+        if os.path.exists(str(pdb_path)+'/'+str(my_protein)+".nx"):
+            G = nx.read_gpickle(str(pdb_path)+'/'+str(my_protein)+".nx")
             graph_dataset.append(G)
     #print(graph_dataset[0].edge_attr)
 
