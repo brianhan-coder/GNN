@@ -82,7 +82,16 @@ def test(model,loader):
          correct += int((pred == data.y).sum())  # Check against ground-truth labels.
      return correct / len(loader.dataset)  # Derive ratio of correct predictions.
 
+def predict(model,loader):
+    output=[]
+    model.eval()
+    for data in loader:
+        out = model(data.x, data.edge_index, data.batch)
+        pred = out.argmax(dim=1)
+        output.append(pred)
+    return output
 
+    
 def get_info_dataset(dataset, verbose=False):
     """Determines the number of inputs labeled one and zero in a dataset."""
     zeros = 0
