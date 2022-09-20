@@ -85,7 +85,8 @@ if __name__ == '__main__':
     num_classes=1
     model = GNN_core.GCN(hidden_channels=64,num_node_features=num_node_features,num_classes=num_classes)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.05)
-    criterion = torch.nn.CrossEntropyLoss()
+    #criterion = torch.nn.CrossEntropyLoss()
+    criterion = torch.nn.L1Loss()
     ### training
     for epoch in range(1, int(n_epochs)):
         GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion)
