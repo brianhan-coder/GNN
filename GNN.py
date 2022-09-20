@@ -100,11 +100,12 @@ if __name__ == '__main__':
     num_node_features=len(graph_dataset[0].x[0])
     num_classes=2
     model = GNN_core.GCN(hidden_channels=64,num_node_features=num_node_features,num_classes=num_classes)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.05)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     criterion = torch.nn.CrossEntropyLoss()
     ### training
     for epoch in range(1, int(n_epochs)):
-        GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion)
+        GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion)  
         train_acc = GNN_core.test(model=model,loader=train_loader)
         test_acc = GNN_core.test(model=model,loader=test_loader)
         print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
+

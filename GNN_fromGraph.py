@@ -77,16 +77,16 @@ if __name__ == '__main__':
     ### mini-batching of graphs, adjacency matrices are stacked in a diagonal fashion. Batching multiple graphs into a single giant graph
 
     from torch_geometric.loader import DataLoader
-    train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=10, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=10, shuffle=True)
 
     ### core GNN 
     num_node_features=len(graph_dataset[0].x[0])
-    num_classes=1
-    model = GNN_core.GCN(hidden_channels=64,num_node_features=num_node_features,num_classes=num_classes)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.05)
-    #criterion = torch.nn.CrossEntropyLoss()
-    criterion = torch.nn.L1Loss()
+    num_classes=2
+    model = GNN_core.GCN(hidden_channels=12,num_node_features=num_node_features,num_classes=num_classes)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+    criterion = torch.nn.CrossEntropyLoss()
+    #criterion = torch.nn.L1Loss()
     ### training
     for epoch in range(1, int(n_epochs)):
         GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion)

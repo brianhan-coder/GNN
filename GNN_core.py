@@ -28,12 +28,9 @@ class GNN(torch.nn.Module):
         x = self.conv2(x, edge_index)
         x = x.relu()
         x = self.conv3(x, edge_index)
-
         x = global_mean_pool(x, batch)
-
         x = F.dropout(x, p=0.5, training=self.training)
         x = self.lin(x)
-        
         return x
 
 class GCN(torch.nn.Module):
@@ -64,7 +61,6 @@ class GCN(torch.nn.Module):
 
 def train(model,train_loader,optimizer,criterion):
     model.train()
-
     for data in train_loader:  # Iterate in batches over the training dataset.
          out = model(data.x, data.edge_index, data.batch)  # Perform a single forward pass.
          loss = criterion(out, data.y)  # Compute the loss.
@@ -74,7 +70,6 @@ def train(model,train_loader,optimizer,criterion):
 
 def test(model,loader):
      model.eval()
-
      correct = 0
      for data in loader:  # Iterate in batches over the training/test dataset.
          out = model(data.x, data.edge_index, data.batch)  
