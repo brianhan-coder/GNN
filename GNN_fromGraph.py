@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
     ### core GNN 
     num_node_features=len(graph_dataset[0].x[0])
-    num_classes=2
+    num_classes=1
     model = GNN_core.GCN(hidden_channels=64,num_node_features=num_node_features,num_classes=num_classes)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.05)
     criterion = torch.nn.CrossEntropyLoss()
