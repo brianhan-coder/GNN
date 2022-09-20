@@ -16,7 +16,7 @@ import random
 from os.path import exists
 from multiprocessing import Pool
 import multiprocessing
-
+import torch.optim.lr_scheduler.StepLR
 
 parser = argparse.ArgumentParser(description="Simulate a GNN with the appropriate hyperparameters.")
 parser.add_argument('-d','--dataset', required=True, help='the protein dataset')
@@ -84,7 +84,8 @@ if __name__ == '__main__':
     num_node_features=len(graph_dataset[0].x[0])
     num_classes=2
     model = GNN_core.GCN(hidden_channels=12,num_node_features=num_node_features,num_classes=num_classes)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.05)
+    scheduler = StepLR(optimizer, step_size=5, gamma=0.001)
     criterion = torch.nn.CrossEntropyLoss()
     #criterion = torch.nn.L1Loss()
     ### training
