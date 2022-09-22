@@ -25,7 +25,7 @@ parser.add_argument('--graph_path', required=True, help='path to the graph files
 parser.add_argument('-r','--training_ratio', required=False, help='path to the pdb files',default=0.7)
 parser.add_argument('--partition_size', required=False, help='sets partition size for the total size of dataset', default='max')
 parser.add_argument('-e','--epochs', required=False, help='number of training epochs', default='10')
-parser.add_argument('-n','--num_payers', required=False, help='number of additional layers, basic architecture has three', default='0')
+parser.add_argument('-n','--num_layers', required=False, help='number of additional layers, basic architecture has three', default='0')
 args = parser.parse_args()
 protein_dataset=args.dataset
 pdb_path=args.graph_path
