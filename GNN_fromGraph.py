@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.data import Data
 import torch_geometric.nn as geom_nn
+from torch_geometric.nn import GCNConv
 import networkx as nx
 import feature_embedding
 import PDB2Graph
@@ -24,12 +25,14 @@ parser.add_argument('--graph_path', required=True, help='path to the graph files
 parser.add_argument('-r','--training_ratio', required=False, help='path to the pdb files',default=0.7)
 parser.add_argument('--partition_size', required=False, help='sets partition size for the total size of dataset', default='max')
 parser.add_argument('-e','--epochs', required=False, help='number of training epochs', default='10')
+parser.add_argument('-n','--num_payers', required=False, help='number of additional layers, basic architecture has three', default='0')
 args = parser.parse_args()
 protein_dataset=args.dataset
 pdb_path=args.graph_path
 partition_ratio=args.training_ratio
 partition_size=args.partition_size
 n_epochs=args.epochs
+num_layers=args.num_layers
 if partition_size != 'max':
     parition_size = int(partition_size)
 
@@ -83,14 +86,25 @@ if __name__ == '__main__':
     ### core GNN 
     num_node_features=len(graph_dataset[0].x[0])
     num_classes=2
-    model = GNN_core.GCN(hidden_channels=12,num_node_features=num_node_features,num_classes=num_classes)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.05)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.001)
+    hidden_channels=12
+    model = GNN_core.GCN(hidden_channels,num_node_features=num_node_features,num_classes=num_classes)
+    ### randomly initialize GCNConv model parameters
+    for layer in model.children():
+        if isinstance(layer, GCNConv):
+            dic = layer.state_dict()
+            for k in dic:
+                dic[k] = torch.randn(dic[k].size())
+            layer.load_state_dict(dic)
+            del(dic)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.0001)
     criterion = torch.nn.CrossEntropyLoss()
-    #criterion = torch.nn.L1Loss()
+
     ### training
     for epoch in range(1, int(n_epochs)):
-        GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion)
+  
+        GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion,hidden_channels,num_layers)
         train_acc = GNN_core.test(model=model,loader=train_loader)
         test_acc = GNN_core.test(model=model,loader=test_loader)
-        print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
+        if epoch %30==0:
+            print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')

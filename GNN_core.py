@@ -1,5 +1,6 @@
 from torch.nn import Linear
 import torch.nn.functional as F
+import torch_geometric
 from torch_geometric.nn import GCNConv
 from torch_geometric.nn import global_mean_pool
 import torch
@@ -19,7 +20,7 @@ class GNN(torch.nn.Module):
         torch.manual_seed(12345)
         self.conv1 = GraphConv(num_node_features, hidden_channels)
         self.conv2 = GraphConv(hidden_channels, hidden_channels)  
-        self.conv3 = GraphConv(hidden_channels, hidden_channels)  
+        self.conv3 = GraphConv(hidden_channels, hidden_channels)
         self.lin = Linear(hidden_channels, num_classes)
 
     def forward(self, x, edge_index, batch):
@@ -38,35 +39,58 @@ class GCN(torch.nn.Module):
         super(GCN, self).__init__()
         torch.manual_seed(12345)
         self.conv1 = GCNConv(num_node_features, hidden_channels)
+        self.bn1 = torch.nn.BatchNorm1d(hidden_channels)
         self.conv2 = GCNConv(hidden_channels, hidden_channels)
+        self.bn2 = torch.nn.BatchNorm1d(hidden_channels)
         self.conv3 = GCNConv(hidden_channels, hidden_channels)
+        self.bn3 = torch.nn.BatchNorm1d(hidden_channels)
         self.lin = Linear(hidden_channels, num_classes)
 
-    def forward(self, x, edge_index, batch):
+    def forward(self, x, edge_index, batch,hidden_channels,num_layers):
         # 1. Obtain node embeddings 
         x = self.conv1(x, edge_index)
         x = x.relu()
+        x = self.bn1(x)
         x = self.conv2(x, edge_index)
         x = x.relu()
+        x = self.bn2(x)
         x = self.conv3(x, edge_index)
+        x = self.bn3(x)
+
+        # 1.1 Additional deep layers
+        for l in range(num_layers):
+            x=x.GCNConv(hidden_channels, hidden_channels)
+            x=x.torch.nn.BatchNorm1d(hidden_channels)
+            x = x.relu()
 
         # 2. Readout layer
         x = global_mean_pool(x, batch)  # [batch_size, hidden_channels]
 
         # 3. Apply a final classifier
-        x = F.dropout(x, p=0.5, training=self.training)
+        #x = F.dropout(x, p=0.5, training=self.training)
         x = self.lin(x)
         
         return x
 
-def train(model,train_loader,optimizer,criterion):
+### helper function to output the internal activations
+activation = {}
+def get_activation(name):
+    def hook(model, input, output):
+        activation[name] = output.detach()
+    return hook
+
+
+def train(model,train_loader,optimizer,criterion,hidden_channels,num_layers):
     model.train()
+    features={} # store the internal node activations
     for data in train_loader:  # Iterate in batches over the training dataset.
-         out = model(data.x, data.edge_index, data.batch)  # Perform a single forward pass.
-         loss = criterion(out, data.y)  # Compute the loss.
-         loss.backward()  # Derive gradients.
-         optimizer.step()  # Update parameters based on gradients.
-         optimizer.zero_grad()  # Clear gradients.
+        #model.conv1.register_forward_hook(get_activation('conv3'))
+        out = model(data.x, data.edge_index, data.batch,hidden_channels,num_layers)  # Perform a single forward pass.
+        #print(np.mean(activation['conv3'].numpy(),axis=0))
+        loss = criterion(out, data.y)  # Compute the loss.
+        loss.backward()  # Derive gradients.
+        optimizer.step()  # Update parameters based on gradients.
+        optimizer.zero_grad()  # Clear gradients.
 
 def test(model,loader):
      model.eval()
@@ -82,8 +106,8 @@ def predict(model,loader):
     model.eval()
     for data in loader:
         out = model(data.x, data.edge_index, data.batch)
-        pred = out.argmax(dim=1)
-        output.append(out)
+        pred = out.numpy()
+        output.append(pred)
     return output
 
 
