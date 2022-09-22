@@ -21,8 +21,8 @@ class FeatureData:
             feature_list.append(item)
 
         min_value=min(value)
-	    max_value=max(value)
-	    for item in feature_list:
+        max_value=max(value)
+        for item in feature_list:
 	        item[1]=str((float(item[1])-min_value)/(max_value-min_value))
         self.features[feature_name]=Convert(feature_list)
     
