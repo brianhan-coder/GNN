@@ -46,7 +46,7 @@ graph_labels=[]
 with open(protein_dataset, "r") as file:
     content = file.read()
 for line in content.splitlines():
-    line=np.array(list(line.split("\t")))
+    line=np.array(list(line.split(" ")))
     proteins.append(line[0])
     graph_labels.append(int(line[1]))
 
