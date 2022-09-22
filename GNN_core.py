@@ -92,11 +92,11 @@ def train(model,train_loader,optimizer,criterion,hidden_channels,num_layers):
         optimizer.step()  # Update parameters based on gradients.
         optimizer.zero_grad()  # Clear gradients.
 
-def test(model,loader):
+def test(model,loader,hidden_channels,num_layers):
      model.eval()
      correct = 0
      for data in loader:  # Iterate in batches over the training/test dataset.
-         out = model(data.x, data.edge_index, data.batch)  
+         out = model(data.x, data.edge_index, data.batch,hidden_channels,num_layers)  
          pred = out.argmax(dim=1)  # Use the class with highest probability.
          correct += int((pred == data.y).sum())  # Check against ground-truth labels.
      return correct / len(loader.dataset)  # Derive ratio of correct predictions.

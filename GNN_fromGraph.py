@@ -104,7 +104,7 @@ if __name__ == '__main__':
     for epoch in range(1, int(n_epochs)):
   
         GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion,hidden_channels=hidden_channels,num_layers=num_layers)
-        train_acc = GNN_core.test(model=model,loader=train_loader)
-        test_acc = GNN_core.test(model=model,loader=test_loader)
+        train_acc = GNN_core.test(model=model,loader=train_loader,hidden_channels=hidden_channels,num_layers=num_layers)
+        test_acc = GNN_core.test(model=model,loader=test_loader,hidden_channels=hidden_channels,num_layers=num_layers)
         if epoch %30==0:
             print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
