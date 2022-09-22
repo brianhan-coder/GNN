@@ -58,7 +58,7 @@ class GCN(torch.nn.Module):
         x = self.bn3(x)
 
         # 1.1 Additional deep layers
-        for l in range(num_layers):
+        for l in range(int(num_layers)):
             x=x.GCNConv(hidden_channels, hidden_channels)
             x=x.torch.nn.BatchNorm1d(hidden_channels)
             x = x.relu()
