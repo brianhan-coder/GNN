@@ -82,7 +82,7 @@ def get_activation(name):
 
 def train(model,train_loader,optimizer,criterion,hidden_channels,num_layers):
     model.train()
-    features={} # store the internal node activations
+
     for data in train_loader:  # Iterate in batches over the training dataset.
         #model.conv1.register_forward_hook(get_activation('conv3'))
         out = model(data.x, data.edge_index, data.batch,hidden_channels,num_layers)  # Perform a single forward pass.

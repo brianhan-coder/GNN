@@ -103,7 +103,7 @@ if __name__ == '__main__':
     ### training
     for epoch in range(1, int(n_epochs)):
   
-        GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion,hidden_channels,num_layers)
+        GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion,hidden_channels=hidden_channels,num_layers=num_layers)
         train_acc = GNN_core.test(model=model,loader=train_loader)
         test_acc = GNN_core.test(model=model,loader=test_loader)
         if epoch %30==0:
