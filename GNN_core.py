@@ -35,7 +35,7 @@ class GNN(torch.nn.Module):
         return x
 
 class GCN(torch.nn.Module):
-    def __init__(self, hidden_channels,num_node_features,num_classes):
+    def __init__(self, hidden_channels,num_node_features,num_classes,num_layers):
         super(GCN, self).__init__()
         torch.manual_seed(12345)
         self.conv1 = GCNConv(num_node_features, hidden_channels)
@@ -44,24 +44,34 @@ class GCN(torch.nn.Module):
         self.bn2 = torch.nn.BatchNorm1d(hidden_channels)
         self.conv3 = GCNConv(hidden_channels, hidden_channels)
         self.bn3 = torch.nn.BatchNorm1d(hidden_channels)
+
+        self.conv=torch.nn.ModuleList()
+        self.bn=torch.nn.ModuleList()
+        for l in range(int(num_layers)):
+            self.conv.append(GCNConv(hidden_channels, hidden_channels))
+            self.bn.append(torch.nn.BatchNorm1d(hidden_channels))
+       
+
         self.lin = Linear(hidden_channels, num_classes)
 
-    def forward(self, x, edge_index, batch,hidden_channels,num_layers):
+    def forward(self, x, edge_index, batch):
         # 1. Obtain node embeddings 
         x = self.conv1(x, edge_index)
-        x = x.relu()
         x = self.bn1(x)
-        x = self.conv2(x, edge_index)
         x = x.relu()
+        x = self.conv2(x, edge_index)
         x = self.bn2(x)
+        x = x.relu()
         x = self.conv3(x, edge_index)
         x = self.bn3(x)
-
+        x = x.relu()
         # 1.1 Additional deep layers
-        for l in range(int(num_layers)):
-            x=x.GCNConv(hidden_channels, hidden_channels)
-            x=x.torch.nn.BatchNorm1d(hidden_channels)
-            x = x.relu()
+        if len(self.conv) > 0:
+            for index,conv_i in enumerate(self.conv):
+                x = conv_i(x,edge_index)
+                x = self.bn[index](x)
+                x = x.relu()
+        #x = x.relu()
 
         # 2. Readout layer
         x = global_mean_pool(x, batch)  # [batch_size, hidden_channels]
@@ -80,23 +90,23 @@ def get_activation(name):
     return hook
 
 
-def train(model,train_loader,optimizer,criterion,hidden_channels,num_layers):
+def train(model,train_loader,optimizer,criterion):
     model.train()
 
     for data in train_loader:  # Iterate in batches over the training dataset.
         #model.conv1.register_forward_hook(get_activation('conv3'))
-        out = model(data.x, data.edge_index, data.batch,hidden_channels,num_layers)  # Perform a single forward pass.
+        out = model(data.x, data.edge_index, data.batch)  # Perform a single forward pass.
         #print(np.mean(activation['conv3'].numpy(),axis=0))
         loss = criterion(out, data.y)  # Compute the loss.
         loss.backward()  # Derive gradients.
         optimizer.step()  # Update parameters based on gradients.
         optimizer.zero_grad()  # Clear gradients.
 
-def test(model,loader,hidden_channels,num_layers):
+def test(model,loader):
      model.eval()
      correct = 0
      for data in loader:  # Iterate in batches over the training/test dataset.
-         out = model(data.x, data.edge_index, data.batch,hidden_channels,num_layers)  
+         out = model(data.x, data.edge_index, data.batch)  
          pred = out.argmax(dim=1)  # Use the class with highest probability.
          correct += int((pred == data.y).sum())  # Check against ground-truth labels.
      return correct / len(loader.dataset)  # Derive ratio of correct predictions.
