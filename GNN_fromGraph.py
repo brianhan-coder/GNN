@@ -62,7 +62,6 @@ if partition_size != 'max':
 if __name__ == '__main__':
     ### parallel converting PDB to graphs 
     graph_dataset=[]
-    print(proteins)
     for protein_index,my_protein in enumerate(proteins):
         if os.path.exists(str(pdb_path)+'/'+str(my_protein)+".nx"):
             G = nx.read_gpickle(str(pdb_path)+'/'+str(my_protein)+".nx")

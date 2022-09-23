@@ -115,7 +115,7 @@ def loss(model,loader,criterion):
     loss=0.
     for data in loader:
         out = model(data.x, data.edge_index, data.batch)
-        loss += criterion(out, data.y)
+        loss += criterion(out, data.y).sum()
     return loss/len(loader.dataset)
 
 def get_info_dataset(dataset, verbose=False):
