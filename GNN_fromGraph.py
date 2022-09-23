@@ -67,7 +67,7 @@ if __name__ == '__main__':
         if os.path.exists(str(pdb_path)+'/'+str(my_protein)+".nx"):
             G = nx.read_gpickle(str(pdb_path)+'/'+str(my_protein)+".nx")
             graph_dataset.append(G)
-            print(G)
+
     #print(graph_dataset[0].edge_attr)
 
     ### train test partition

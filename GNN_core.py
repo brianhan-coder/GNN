@@ -114,7 +114,7 @@ def loss(model,loader,criterion):
     model.eval()
     loss=0.
     for data in loader:
-        out = model(data.x, data.edge_indexx, data.batch)
+        out = model(data.x, data.edge_index, data.batch)
         loss += criterion(out, data.y)
     return loss/len(loader.dataset)
 
