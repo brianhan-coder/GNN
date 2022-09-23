@@ -109,6 +109,6 @@ if __name__ == '__main__':
         test_acc = GNN_core.test(model=model,loader=test_loader)
         
         test_loss=GNN_core.loss(model=model,loader=test_loader,criterion=criterion).item()
-        print(test_loss)
+
         if epoch %20==0:
             print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}, Test loss: {test_loss:.4f}')
