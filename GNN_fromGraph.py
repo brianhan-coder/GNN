@@ -88,7 +88,6 @@ if __name__ == '__main__':
     num_classes=2
     hidden_channels=12
     model = GNN_core.GCN(hidden_channels,num_node_features=num_node_features,num_classes=num_classes,num_layers=num_layers)
-    print(model)
     ### randomly initialize GCNConv model parameters
     for layer in model.children():
         if isinstance(layer, GCNConv):
@@ -107,5 +106,5 @@ if __name__ == '__main__':
         GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion)
         train_acc = GNN_core.test(model=model,loader=train_loader)
         test_acc = GNN_core.test(model=model,loader=test_loader)
-        if epoch %30==0:
+        if epoch %10==0:
             print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')

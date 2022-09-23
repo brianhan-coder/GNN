@@ -71,7 +71,6 @@ class GCN(torch.nn.Module):
                 x = conv_i(x,edge_index)
                 x = self.bn[index](x)
                 x = x.relu()
-        #x = x.relu()
 
         # 2. Readout layer
         x = global_mean_pool(x, batch)  # [batch_size, hidden_channels]
@@ -167,12 +166,13 @@ def convert_pdb2graph(input):
     featureData=input[2]
     graph_labels=input[3]
     protein_index=input[4]
-    path=str(pdb_path)+'/'+str(my_protein)+'.pdb'
+    path=str(pdb_path)+'/'+'AF-'+str(my_protein)+'-F1-model_v3.pdb'
     if exists(path):
         try:
             pdb_df=pdb2df(path)
             res2node=PDB2Graph.residueID2nodeID(pdb_df)
-            G=read_pdb(str(pdb_path)+'/'+str(my_protein)+'.pdb')
+            #G=read_pdb(str(pdb_path)+'/'+str(my_protein)+'.pdb')
+            G=read_pdb(str(pdb_path)+'/'+'AF-'+str(my_protein)+'-F1-model_v3.pdb')
             PDB2Graph.add_pi_pi_interactions(G,pdb_df)
 
             node=PDB2Graph.node(G,res2node)
