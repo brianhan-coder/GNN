@@ -102,23 +102,21 @@ def train(model,train_loader,optimizer,criterion):
         optimizer.zero_grad()  # Clear gradients.
 
 def test(model,loader):
-     model.eval()
-     correct = 0
-     for data in loader:  # Iterate in batches over the training/test dataset.
-         out = model(data.x, data.edge_index, data.batch)  
-         pred = out.argmax(dim=1)  # Use the class with highest probability.
-         correct += int((pred == data.y).sum())  # Check against ground-truth labels.
-     return correct / len(loader.dataset)  # Derive ratio of correct predictions.
-
-def predict(model,loader):
-    output=[]
     model.eval()
-    for data in loader:
-        out = model(data.x, data.edge_index, data.batch)
-        pred = out.numpy()
-        output.append(pred)
-    return output
+    correct = 0
+    for data in loader:  # Iterate in batches over the training/test dataset.
+        out = model(data.x, data.edge_index, data.batch)  
+        pred = out.argmax(dim=1)  # Use the class with highest probability.
+        correct += int((pred == data.y).sum())  # Check against ground-truth labels.
+    return correct / len(loader.dataset)  # Derive ratio of correct predictions.
 
+def loss(model,loader,criterion):
+    model.eval()
+    loss=0.
+    for data in loader:
+        out = model(data.x, data.edge_indexx, data.batch)
+        loss += criterion(out, data.y)
+    return loss/len(loader.dataset)
 
 def get_info_dataset(dataset, verbose=False):
     """Determines the number of inputs labeled one and zero in a dataset."""

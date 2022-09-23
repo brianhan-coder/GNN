@@ -62,10 +62,12 @@ if partition_size != 'max':
 if __name__ == '__main__':
     ### parallel converting PDB to graphs 
     graph_dataset=[]
+    print(proteins)
     for protein_index,my_protein in enumerate(proteins):
         if os.path.exists(str(pdb_path)+'/'+str(my_protein)+".nx"):
             G = nx.read_gpickle(str(pdb_path)+'/'+str(my_protein)+".nx")
             graph_dataset.append(G)
+            print(G)
     #print(graph_dataset[0].edge_attr)
 
     ### train test partition
@@ -106,5 +108,7 @@ if __name__ == '__main__':
         GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion)
         train_acc = GNN_core.test(model=model,loader=train_loader)
         test_acc = GNN_core.test(model=model,loader=test_loader)
-        if epoch %10==0:
+        test_loss = GNN_core.loss(model=model,loader=test_loader,criterion=criterion)
+        print(test_loss)
+        if epoch %20==0:
             print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
