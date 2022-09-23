@@ -107,8 +107,8 @@ if __name__ == '__main__':
         GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion)
         train_acc = GNN_core.test(model=model,loader=train_loader)
         test_acc = GNN_core.test(model=model,loader=test_loader)
-        test_loss=[]
-        test_loss.append(GNN_core.loss(model=model,loader=test_loader,criterion=criterion).item())
+        
+        test_loss=GNN_core.loss(model=model,loader=test_loader,criterion=criterion).item()
         print(test_loss)
         if epoch %20==0:
-            print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
+            print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}, Test loss: {test_loss:.4f}')
