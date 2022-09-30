@@ -115,7 +115,7 @@ def predict(model,loader):
     pred=[]
     for data in loader:  # Iterate in batches over the training/test dataset.
         out = model(data.x, data.edge_index, data.batch)  
-        pred.append(out.argmax(dim=1))  # Use the class with highest probability.
+        pred.append(out.argmax(dim=1).tolist())  # Use the class with highest probability.
           # Check against ground-truth labels.
     return pred  # Derive ratio of correct predictions.
 
