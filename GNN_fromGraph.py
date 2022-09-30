@@ -156,8 +156,8 @@ if __name__ == '__main__':
     label_test=[]
     for data in test_loader:  # Iterate in batches over the training/test dataset.
         label_test.append(data.y.tolist())
-    label_test=label_test.ravel()
-    predict_test=predict_test.ravel()
+    label_test=np.array(label_test).ravel()
+    predict_test=np.array(predict_test).ravel()
     print(label_test,predict_test)
     fpr1, tpr1, thresholds = roc_curve(label_test, predict_test)
     tn, fp, fn, tp = confusion_matrix(label_test, predict_test).ravel()
