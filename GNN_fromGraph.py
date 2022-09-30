@@ -152,13 +152,13 @@ if __name__ == '__main__':
     print(f'score on train set: {trainscore}')
     print(f'score on test set: {testscore}')
     predict_test = GNN_core.predict(model=best_model,loader=test_loader)
-
+    print(predict_test)
     label_test=[]
     for data in test_loader:  # Iterate in batches over the training/test dataset.
         label_test.append(data.y.tolist())
     label_test=np.array(label_test).ravel()
     predict_test=np.array(predict_test).ravel()
-    
+
     fpr1, tpr1, thresholds = roc_curve(label_test, predict_test)
     tn, fp, fn, tp = confusion_matrix(label_test, predict_test).ravel()
     AUROC = auc(fpr1, tpr1)
