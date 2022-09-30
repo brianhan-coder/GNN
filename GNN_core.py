@@ -110,6 +110,15 @@ def test(model,loader):
         correct += int((pred == data.y).sum())  # Check against ground-truth labels.
     return correct / len(loader.dataset)  # Derive ratio of correct predictions.
 
+def predict(model,loader):
+    model.eval()
+    pred=[]
+    for data in loader:  # Iterate in batches over the training/test dataset.
+        out = model(data.x, data.edge_index, data.batch)  
+        pred.append(out.argmax(dim=1))  # Use the class with highest probability.
+          # Check against ground-truth labels.
+    return pred  # Derive ratio of correct predictions.
+
 def loss(model,loader,criterion):
     model.eval()
     loss=0.
