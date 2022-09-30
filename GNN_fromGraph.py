@@ -158,6 +158,7 @@ if __name__ == '__main__':
         label_test.append(data.y.tolist())
     label_test=np.array(label_test).ravel()
     predict_test=np.array(predict_test).ravel()
+    
     fpr1, tpr1, thresholds = roc_curve(label_test, predict_test)
     tn, fp, fn, tp = confusion_matrix(label_test, predict_test).ravel()
     AUROC = auc(fpr1, tpr1)
