@@ -151,7 +151,7 @@ if __name__ == '__main__':
     testscore = GNN_core.test(model=best_model,loader=test_loader)
     print(f'score on train set: {trainscore}')
     print(f'score on test set: {testscore}')
-    predict_test = GNN_core.predict(model=best_model,loader=test_loader)
+    predict_test = GNN_core.predict(model=best_model,loader=test_loader).tolist()
 
     label_test=[]
     for data in test_loader:  # Iterate in batches over the training/test dataset.
