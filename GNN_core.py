@@ -117,7 +117,7 @@ def predict(model,loader):
         out = model(data.x, data.edge_index, data.batch)  
         pred.append(out.argmax(dim=1))  # Use the class with highest probability.
           # Check against ground-truth labels.
-    return pred.tolist()  # Derive ratio of correct predictions.
+    return pred  # Derive ratio of correct predictions.
 
 def loss(model,loader,criterion):
     model.eval()
