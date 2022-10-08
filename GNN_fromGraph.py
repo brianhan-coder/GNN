@@ -31,11 +31,13 @@ parser.add_argument('-e','--epochs', required=False, help='number of training ep
 parser.add_argument('-n','--num_layers', required=False, help='number of additional layers, basic architecture has three', default='0')
 parser.add_argument('-p','--patience', required=False, type=int, help='upper limit for the patience counter used in validation', default=20)
 parser.add_argument('-b','--batch_size', required=False, type=int, help='batch size for training, testing and validation', default=40)
+parser.add_argument('-r','--learning_rate', required=False, type=float, help='initial learning rate', default=0.01)
 args = parser.parse_args()
 protein_dataset=args.dataset
 pdb_path=args.graph_path
 partition_ratio=args.training_ratio
 partition_size=args.partition_size
+lr=args.learning_rate
 n_epochs=args.epochs
 ratio = args.partition_ratio.split(":")
 ratio = [float(entry) for entry in ratio]
@@ -114,7 +116,7 @@ if __name__ == '__main__':
                 dic[k] = torch.randn(dic[k].size())
             layer.load_state_dict(dic)
             del(dic)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=200, gamma=0.0001)
     criterion = torch.nn.CrossEntropyLoss()
 
@@ -170,5 +172,5 @@ if __name__ == '__main__':
     recall = tp/(tp+fn)
     print(f'  precision = {precision}')
     print(f'  recall = {recall}')
-
+    print(args)
     print(round(AUROC,3),round(trainscore,3),round(testscore,3),round(precision,3),round(recall,3),tn, fp, fn, tp)
