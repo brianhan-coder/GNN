@@ -33,7 +33,7 @@ parser.add_argument('-n','--num_layers', required=False, help='number of additio
 parser.add_argument('-p','--patience', required=False, type=int, help='upper limit for the patience counter used in validation', default=20)
 parser.add_argument('-b','--batch_size', required=False, type=int, help='batch size for training, testing and validation', default=40)
 parser.add_argument('-l','--learning_rate', required=False, type=float, help='initial learning rate', default=0.01)
-parser.add_argument('-m','--model_type', required=False, type=str, help='the underlying model of the neural network', default='GNN')
+parser.add_argument('-m','--model_type', required=False, type=str, help='the underlying model of the neural network', default='GCN')
 args = parser.parse_args()
 protein_dataset=args.dataset
 pdb_path=args.graph_path
@@ -111,6 +111,8 @@ if __name__ == '__main__':
         model = GNN_core.GCN(hidden_channels,num_node_features=num_node_features,num_classes=num_classes,num_layers=num_layers)
     if arch == 'GNN':
         model = GNN_core.GNN(hidden_channels,num_node_features=num_node_features,num_classes=num_classes,num_layers=num_layers)
+    if arch == 'GTN':
+        model = GNN_core.GTN(hidden_channels,num_node_features=num_node_features,num_classes=num_classes,num_layers=num_layers)
     ### randomly initialize GCNConv model parameters
     for layer in model.children():
         if isinstance(layer, GCNConv):
