@@ -170,3 +170,5 @@ if __name__ == '__main__':
     recall = tp/(tp+fn)
     print(f'  precision = {precision}')
     print(f'  recall = {recall}')
+
+    print(round(AUROC,3),round(trainscore,3),round(testscore,3),round(precision,3),round(recall,3),tn, fp, fn, tp)
