@@ -30,7 +30,7 @@ parser.add_argument('--partition_size', required=False, help='sets partition siz
 parser.add_argument('-e','--epochs', required=False, help='number of training epochs', default='10')
 parser.add_argument('-n','--num_layers', required=False, help='number of additional layers, basic architecture has three', default='0')
 parser.add_argument('-p','--patience', required=False, type=int, help='upper limit for the patience counter used in validation', default=20)
-
+parser.add_argument('-b','--batch_size', required=False, type=int, help='batch size for training, testing and validation', default=40)
 args = parser.parse_args()
 protein_dataset=args.dataset
 pdb_path=args.graph_path
@@ -39,6 +39,7 @@ partition_size=args.partition_size
 n_epochs=args.epochs
 ratio = args.partition_ratio.split(":")
 ratio = [float(entry) for entry in ratio]
+batch_size=args.batch_size
 num_layers=args.num_layers
 if partition_size != 'max':
     parition_size = int(partition_size)
@@ -97,9 +98,9 @@ if __name__ == '__main__':
     ### mini-batching of graphs, adjacency matrices are stacked in a diagonal fashion. Batching multiple graphs into a single giant graph
 
     from torch_geometric.loader import DataLoader
-    train_loader = DataLoader(train_dataset, batch_size=10, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=10, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=10, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     ### core GNN 
     num_node_features=len(graph_dataset[0].x[0])
     num_classes=2
@@ -153,7 +154,7 @@ if __name__ == '__main__':
     print(f'score on test set: {testscore}')
     predict_test = GNN_core.predict(model=best_model,loader=test_loader)
     label_test=[]
-    for data in test_loader:  # Iterate in batches over the training/test dataset.
+    for data in test_loader:
         label_test.append(data.y.tolist())
 
     label_test=[item for sublist in label_test for item in sublist]
