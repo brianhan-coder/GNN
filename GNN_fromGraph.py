@@ -31,7 +31,7 @@ parser.add_argument('-e','--epochs', required=False, help='number of training ep
 parser.add_argument('-n','--num_layers', required=False, help='number of additional layers, basic architecture has three', default='0')
 parser.add_argument('-p','--patience', required=False, type=int, help='upper limit for the patience counter used in validation', default=20)
 parser.add_argument('-b','--batch_size', required=False, type=int, help='batch size for training, testing and validation', default=40)
-parser.add_argument('-r','--learning_rate', required=False, type=float, help='initial learning rate', default=0.01)
+parser.add_argument('-l','--learning_rate', required=False, type=float, help='initial learning rate', default=0.01)
 args = parser.parse_args()
 protein_dataset=args.dataset
 pdb_path=args.graph_path
