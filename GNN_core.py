@@ -53,7 +53,8 @@ class GNN(torch.nn.Module):
         x = global_mean_pool(x, batch)  # [batch_size, hidden_channels]
 
         x = self.lin(x)
-
+        return x
+        
 class GCN(torch.nn.Module):
     def __init__(self, hidden_channels,num_node_features,num_classes,num_layers):
         super(GCN, self).__init__()
@@ -115,7 +116,7 @@ def train(model,train_loader,optimizer,criterion):
     for data in train_loader:  # Iterate in batches over the training dataset.
         #model.conv1.register_forward_hook(get_activation('conv3'))
         out = model(data.x, data.edge_index, data.batch)  # Perform a single forward pass.
-        #print(np.mean(activation['conv3'].numpy(),axis=0))
+        print(out)
         loss = criterion(out, data.y)  # Compute the loss.
         loss.backward()  # Derive gradients.
         optimizer.step()  # Update parameters based on gradients.
