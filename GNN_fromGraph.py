@@ -1,5 +1,6 @@
 from logging import exception
 import os
+from platform import architecture
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 import numpy as np
 import torch
@@ -32,6 +33,7 @@ parser.add_argument('-n','--num_layers', required=False, help='number of additio
 parser.add_argument('-p','--patience', required=False, type=int, help='upper limit for the patience counter used in validation', default=20)
 parser.add_argument('-b','--batch_size', required=False, type=int, help='batch size for training, testing and validation', default=40)
 parser.add_argument('-l','--learning_rate', required=False, type=float, help='initial learning rate', default=0.01)
+parser.add_argument('-m','--model_type', required=False, type=str, help='the underlying model of the neural network', default='GNN')
 args = parser.parse_args()
 protein_dataset=args.dataset
 pdb_path=args.graph_path
@@ -39,15 +41,13 @@ partition_ratio=args.training_ratio
 partition_size=args.partition_size
 lr=args.learning_rate
 n_epochs=args.epochs
+arch=args.model_type
 ratio = args.partition_ratio.split(":")
 ratio = [float(entry) for entry in ratio]
 batch_size=args.batch_size
 num_layers=args.num_layers
 if partition_size != 'max':
     parition_size = int(partition_size)
-
-gnn_layer_by_name = {"GCN": geom_nn.GCNConv, "GAT": geom_nn.GATConv, "GraphConv": geom_nn.GraphConv}
-
 
 ### load proteins
 
@@ -107,7 +107,10 @@ if __name__ == '__main__':
     num_node_features=len(graph_dataset[0].x[0])
     num_classes=2
     hidden_channels=12
-    model = GNN_core.GCN(hidden_channels,num_node_features=num_node_features,num_classes=num_classes,num_layers=num_layers)
+    if arch == 'GCN':
+        model = GNN_core.GCN(hidden_channels,num_node_features=num_node_features,num_classes=num_classes,num_layers=num_layers)
+    if arch == 'GNN':
+        model = GNN_core.GNN(hidden_channels,num_node_features=num_node_features,num_classes=num_classes,num_layers=num_layers)
     ### randomly initialize GCNConv model parameters
     for layer in model.children():
         if isinstance(layer, GCNConv):

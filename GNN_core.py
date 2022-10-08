@@ -15,24 +15,44 @@ from proteingraph import read_pdb
 import GNN_core
 
 class GNN(torch.nn.Module):
-    def __init__(self, hidden_channels,num_node_features,num_classes):
+    def __init__(self, hidden_channels,num_node_features,num_classes,num_layers):
         super(GNN, self).__init__()
         torch.manual_seed(12345)
         self.conv1 = GraphConv(num_node_features, hidden_channels)
-        self.conv2 = GraphConv(hidden_channels, hidden_channels)  
+        self.bn1 = torch.nn.BatchNorm1d(hidden_channels)
+        self.conv2 = GraphConv(hidden_channels, hidden_channels)
+        self.bn2 = torch.nn.BatchNorm1d(hidden_channels)
         self.conv3 = GraphConv(hidden_channels, hidden_channels)
+        self.bn3 = torch.nn.BatchNorm1d(hidden_channels)
+
+        self.conv=torch.nn.ModuleList()
+        self.bn=torch.nn.ModuleList()
+        for l in range(int(num_layers)):
+            self.conv.append(GraphConv(hidden_channels, hidden_channels))
+            self.bn.append(torch.nn.BatchNorm1d(hidden_channels))
+
         self.lin = Linear(hidden_channels, num_classes)
 
     def forward(self, x, edge_index, batch):
         x = self.conv1(x, edge_index)
+        x = self.bn1(x)
         x = x.relu()
         x = self.conv2(x, edge_index)
+        x = self.bn2(x)
         x = x.relu()
         x = self.conv3(x, edge_index)
-        x = global_mean_pool(x, batch)
-        x = F.dropout(x, p=0.5, training=self.training)
+        x = self.bn3(x)
+        x = x.relu()
+        # 1.1 Additional deep layers
+        if len(self.conv) > 0:
+            for index,conv_i in enumerate(self.conv):
+                x = conv_i(x,edge_index)
+                x = self.bn[index](x)
+                x = x.relu()
+        # 2. Readout layer
+        x = global_mean_pool(x, batch)  # [batch_size, hidden_channels]
+
         x = self.lin(x)
-        return x
 
 class GCN(torch.nn.Module):
     def __init__(self, hidden_channels,num_node_features,num_classes,num_layers):
