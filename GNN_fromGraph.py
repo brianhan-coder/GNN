@@ -27,7 +27,7 @@ parser.add_argument('--graph_path', required=True, help='path to the graph files
 parser.add_argument('-r','--training_ratio', required=False, help='path to the pdb files',default=0.7)
 parser.add_argument('--partition_ratio', required=False, type=str, help="governs the ration of partition sizes in the training, validation, and test sets. a list of the form [train, val, test]", default="0.4:0.3:0.3")
 parser.add_argument('--partition_size', required=False, help='sets partition size for the total size of dataset', default='max')
-parser.add_argument('-e','--epochs', required=False, help='number of training epochs', default='10')
+parser.add_argument('-e','--epochs', required=False, help='number of training epochs', default='1001')
 parser.add_argument('-n','--num_layers', required=False, help='number of additional layers, basic architecture has three', default='0')
 parser.add_argument('-p','--patience', required=False, type=int, help='upper limit for the patience counter used in validation', default=20)
 parser.add_argument('-b','--batch_size', required=False, type=int, help='batch size for training, testing and validation', default=40)
@@ -115,7 +115,7 @@ if __name__ == '__main__':
             layer.load_state_dict(dic)
             del(dic)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.0001)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=200, gamma=0.0001)
     criterion = torch.nn.CrossEntropyLoss()
 
     best_val_acc = 0
