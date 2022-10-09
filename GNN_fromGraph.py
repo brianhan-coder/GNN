@@ -33,7 +33,9 @@ parser.add_argument('-n','--num_layers', required=False, help='number of additio
 parser.add_argument('-p','--patience', required=False, type=int, help='upper limit for the patience counter used in validation', default=20)
 parser.add_argument('-b','--batch_size', required=False, type=int, help='batch size for training, testing and validation', default=40)
 parser.add_argument('-l','--learning_rate', required=False, type=float, help='initial learning rate', default=0.01)
-parser.add_argument('-m','--model_type', required=False, type=str, help='the underlying model of the neural network', default='GCN')
+parser.add_argument('-m','--model_type', required=False, type=str, help='the underlying model of the neural network', default='GTN')
+parser.add_argument('-c','--hidden_channel', required=False, type=int, help='width of hidden layers', default=12)
+
 args = parser.parse_args()
 protein_dataset=args.dataset
 pdb_path=args.graph_path
@@ -46,6 +48,7 @@ ratio = args.partition_ratio.split(":")
 ratio = [float(entry) for entry in ratio]
 batch_size=args.batch_size
 num_layers=args.num_layers
+hidden_channels=args.hidden_channel
 if partition_size != 'max':
     parition_size = int(partition_size)
 
@@ -106,7 +109,7 @@ if __name__ == '__main__':
     ### core GNN 
     num_node_features=len(graph_dataset[0].x[0])
     num_classes=2
-    hidden_channels=12
+
     if arch == 'GCN':
         model = GNN_core.GCN(hidden_channels,num_node_features=num_node_features,num_classes=num_classes,num_layers=num_layers)
     if arch == 'GNN':
