@@ -6,10 +6,27 @@ AA_Molecular_volume: Amino Acid Difference Formula to Help Explain Protein Evolu
 AA_composition: Amino Acid Difference Formula to Help Explain Protein Evolution
 AA_polirizability: https://doi.org/10.1111/j.1399-3011.1988.tb01261.x
 AA_vanderWaalsVolume: https://doi.org/10.1111/j.1399-3011.1988.tb01261.x
-AA_graph_shape_index: https://doi.org/10.1111/j.1399-3011.1988.tb01261.x
+AA_graph_shape_index: https://doi.org/10.1111/j.1399-3011.1988.tb01261.x . complexity, branching, and symmetry of the group
 AA_NHydrogenBondDonors: https://doi.org/10.1111/j.1399-3011.1988.tb01261.x
 AA_charge: -1(negative charged) 1 (positive charged): https://doi.org/10.1111/j.1399-3011.1988.tb01261.x
 AA_IDP_Scale: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2676888/pdf/nihms-105641.pdf
+AA_upsilon_steric_parameter: https://doi.org/10.1111/j.1399-3011.1988.tb01261.x . Measure of the steric effect, based on van-der-Waals radii
+AA_NNonbondingOrbitals: https://doi.org/10.1111/j.1399-3011.1988.tb01261.x
+AA_RelativeMutability: https://web.expasy.org/protscale/, In "Atlas of Protein Sequence and Structure", Vol.5, Suppl.3 (1978). Relative mutability of amino acids (Ala=100). Dayhoff M.O., Schwartz R.M., Orcutt B.C.
+AA_NCondonsCoding: https://web.expasy.org/protscale/, Number of codon(s) coding for each amino acid in universal genetic code.
+AA_Bulkiness: https://web.expasy.org/protscale/, the ratio of the side chain volume to its length
+AA_RecognitionFactors: https://web.expasy.org/protscale/,  Can. J. Chem. 60:2606-2610(1982)
+AA_Refractivity: https://web.expasy.org/protscale/  J. Theor. Biol. 50:167-184(1975).
+AA_AverageAreaBuried: https://web.expasy.org/protscale/  Science 229:834-838(1985)
+AA_AlphaHelix: https://web.expasy.org/protscale/ Normalized frequency for alpha helix Levitt M. Biochemistry 17:4277-4285(1978).
+AA_BetaTurn: https://web.expasy.org/protscale/ Normalized frequency for beta-turn Levitt M. Biochemistry 17:4277-4285(1978).
+AA_BetaSheet: https://web.expasy.org/protscale/ Normalized frequency for beta-sheet. Levitt M. Biochemistry 17:4277-4285(1978).
+AA_ParallelBetaStrand: https://web.expasy.org/protscale/ Nature 282:109-111(1979).
+AA_AntiParallelBetaStrand: https://web.expasy.org/protscale/ Nature 282:109-111(1979).
+AA_RatioHeteroEndSide: https://web.expasy.org/protscale/  Atomic weight ratio of hetero elements in end group to C in side chain. Science 185:862-864(1974).
+AA_accessibility: https://web.expasy.org/protscale/ Molar fraction (%) of 3220 accessible residues. Nature 277:491-492(1979).
+AA_BuriedResidues: https://web.expasy.org/protscale/   Molar fraction (%) of 2001 buried residues. Nature 277:491-492(1979).
+AA_CoilParameter: https://web.expasy.org/protscale/  Conformational parameter for coil. Protein Engineering 1:289-294(1987). Deleage G., Roux B.
 
 
 see also https://web.expasy.org/protscale/

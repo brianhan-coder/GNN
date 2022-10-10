@@ -1,0 +1,10 @@
+
+5 params:
+featureData.readFeatureFile("AA_features/AA_polarity.dat","polarity")
+featureData.readFeatureFile("AA_features/AA_hydrophobicity.dat","hydrophobicity")
+featureData.readFeatureFile("AA_features/AA_flexibility.dat","flexibility")
+featureData.readFeatureFile("AA_features/AA_IDP_Scale.dat","IDP_scale")
+featureData.readFeatureFile("AA_features/AA_charge.dat","charge")
+
+
+
