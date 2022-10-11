@@ -18,17 +18,17 @@ from multiprocessing import Pool
 import multiprocessing
 
 
-parser = argparse.ArgumentParser(description="Simulate a GNN with the appropriate hyperparameters.")
+parser = argparse.ArgumentParser(description="create graph library for GNN training")
 parser.add_argument('-d','--dataset', required=True, help='the protein dataset')
 parser.add_argument('--pdb_path', required=True, help='path to the pdb files')
-parser.add_argument('-r','--training_ratio', required=False, help='path to the pdb files',default=0.7)
-parser.add_argument('--partition_size', required=False, help='sets partition size for the total size of dataset', default='max')
-parser.add_argument('-e','--epochs', required=False, help='number of training epochs', default='10')
+parser.add_argument('-g','--graph_path' required=True, help='path to the location where the graphs should be saved')
+
 args = parser.parse_args()
 protein_dataset=args.dataset
 pdb_path=args.pdb_path
 partition_ratio=args.training_ratio
 partition_size=args.partition_size
+graph_path=args.graph_path
 n_epochs=args.epochs
 if partition_size != 'max':
     parition_size = int(partition_size)
@@ -92,4 +92,4 @@ if __name__ == '__main__':
 
         G=GNN_core.convert_pdb2graph(input_list)
         if G!=None:
-            nx.write_gpickle(G, "graph_base/graph100_PDB/"+str(my_protein)+".nx")
+            nx.write_gpickle(G, graph_path+'/'+str(my_protein)+".nx")
