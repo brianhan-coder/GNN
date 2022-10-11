@@ -4,7 +4,7 @@ AA_flexibility: Int. J. Pept. Protein. Res. 32:242-255(1988). https://web.expasy
 AA_Molecular_mass: https://en.wikipedia.org/wiki/Amino_acid#Isomerism
 AA_Molecular_volume: Amino Acid Difference Formula to Help Explain Protein Evolution
 AA_composition: Amino Acid Difference Formula to Help Explain Protein Evolution
-AA_polirizability: https://doi.org/10.1111/j.1399-3011.1988.tb01261.x
+AA_polirizability (warning problem, PRO data missing, set to 0): https://doi.org/10.1111/j.1399-3011.1988.tb01261.x
 AA_vanderWaalsVolume: https://doi.org/10.1111/j.1399-3011.1988.tb01261.x
 AA_graph_shape_index: https://doi.org/10.1111/j.1399-3011.1988.tb01261.x . complexity, branching, and symmetry of the group
 AA_NHydrogenBondDonors: https://doi.org/10.1111/j.1399-3011.1988.tb01261.x

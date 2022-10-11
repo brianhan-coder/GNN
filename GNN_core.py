@@ -233,13 +233,26 @@ def convert_pdb2graph(input):
     featureData=input[2]
     graph_labels=input[3]
     protein_index=input[4]
-    path=str(pdb_path)+'/'+'AF-'+str(my_protein)+'-F1-model_v3.pdb'
+    type_input=input[5]
+    if type_input=='AlphaFold':
+        path=str(pdb_path)+'/'+'AF-'+str(my_protein)+'-F1-model_v3.pdb'
+    if type_input=='PDB':
+        path=str(pdb_path)+'/'+str(my_protein)+'.pdb'
+    else:
+        print('Unkown input type, must be AlphaFold or PDB')
+        return 
     if exists(path):
         try:
             pdb_df=pdb2df(path)
             res2node=PDB2Graph.residueID2nodeID(pdb_df)
             #G=read_pdb(str(pdb_path)+'/'+str(my_protein)+'.pdb')
-            G=read_pdb(str(pdb_path)+'/'+'AF-'+str(my_protein)+'-F1-model_v3.pdb')
+            if type_input=='AlphaFold':
+                G=read_pdb(str(pdb_path)+'/'+'AF-'+str(my_protein)+'-F1-model_v3.pdb')
+            if type_input=='PDB':
+                G=read_pdb(str(pdb_path)+'/'+str(my_protein)+'.pdb')
+            else:
+                print('Unkown input type, must be AlphaFold or PDB')
+                return
             PDB2Graph.add_pi_pi_interactions(G,pdb_df)
 
             node=PDB2Graph.node(G,res2node)

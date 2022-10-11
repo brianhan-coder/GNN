@@ -21,19 +21,13 @@ import multiprocessing
 parser = argparse.ArgumentParser(description="create graph library for GNN training")
 parser.add_argument('-d','--dataset', required=True, help='the protein dataset')
 parser.add_argument('--pdb_path', required=True, help='path to the pdb files')
-parser.add_argument('-g','--graph_path' required=True, help='path to the location where the graphs should be saved')
-
+parser.add_argument('-g','--graph_path', required=True, help='path to the location where the graphs should be saved')
+parser.add_argument('-i','--type_input', required=True, help='specify whether it is AlphaFold input or PDB input')
 args = parser.parse_args()
 protein_dataset=args.dataset
 pdb_path=args.pdb_path
-partition_ratio=args.training_ratio
-partition_size=args.partition_size
 graph_path=args.graph_path
-n_epochs=args.epochs
-if partition_size != 'max':
-    parition_size = int(partition_size)
-
-gnn_layer_by_name = {"GCN": geom_nn.GCNConv, "GAT": geom_nn.GATConv, "GraphConv": geom_nn.GraphConv}
+type_input=args.type_input
 
 ### loading features
 
@@ -80,15 +74,12 @@ tmp = list(zip(proteins, graph_labels))
 random.shuffle(tmp)
 proteins, graph_labels = zip(*tmp)
 proteins, graph_labels = list(proteins), list(graph_labels)
-if partition_size != 'max':
-    proteins=proteins[:int(partition_size)]
-    graph_labels=graph_labels[:int(partition_size)]
 
 
 if __name__ == '__main__':
     ### parallel converting PDB to graphs
     for protein_index,my_protein in enumerate(proteins):
-        input_list=[pdb_path,my_protein,featureData,graph_labels,protein_index]
+        input_list=[pdb_path,my_protein,featureData,graph_labels,protein_index,type_input]
 
         G=GNN_core.convert_pdb2graph(input_list)
         if G!=None:
