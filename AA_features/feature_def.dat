@@ -27,6 +27,6 @@ AA_RatioHeteroEndSide: https://web.expasy.org/protscale/  Atomic weight ratio of
 AA_accessibility: https://web.expasy.org/protscale/ Molar fraction (%) of 3220 accessible residues. Nature 277:491-492(1979).
 AA_BuriedResidues: https://web.expasy.org/protscale/   Molar fraction (%) of 2001 buried residues. Nature 277:491-492(1979).
 AA_CoilParameter: https://web.expasy.org/protscale/  Conformational parameter for coil. Protein Engineering 1:289-294(1987). Deleage G., Roux B.
-
+AA_PiSite: https://elifesciences.org/articles/31486#app1table2 Fig1B
 
 see also https://web.expasy.org/protscale/
