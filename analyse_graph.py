@@ -142,14 +142,18 @@ index=0
 proteins[0]='3W06'
 for protein_index,my_protein in enumerate(proteins):
     if os.path.exists(str(pdb_path)+'/'+str(my_protein)+".nx") and index<1:
-        G = nx.Graph(nx.read_gpickle(str(pdb_path)+'/'+str(my_protein)+".nx"))
+        G = nx.read_gpickle(str(pdb_path)+'/'+str(my_protein)+".nx")
         G_new=nx.Graph()
-        num_nodes=len(list(G['x'])[0].numpy())
-        first=list(G['edge_index'])[0].numpy()[0]
-        second=list(G['edge_index'])[0].numpy()[1]
+        num_nodes=len(G['x'].numpy())
+        first=G['edge_index'].numpy()[0]
+        second=G['edge_index'].numpy()[1]
+        #num_nodes=len(list(G['x'])[0].numpy())
+        #first=list(G['edge_index'])[0].numpy()[0]
+        #second=list(G['edge_index'])[0].numpy()[1]
         print('protein: ',my_protein,'edge/res: ',2*len(first)/num_nodes,num_nodes)
         #contact_map_plot(first,second,num_nodes)
         #numberEdge_perNode(first,second,num_nodes)
+
         spec_c=cluster.spectral_cluster(G)
         modul_c=cluster.modularity_clustering(G)
 

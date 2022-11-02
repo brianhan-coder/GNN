@@ -12,7 +12,7 @@ import igraph as ig
 from itertools import groupby,chain
 from operator import itemgetter
 
-Q_thres=0.03
+Q_thres=0.01
 ave_node_thres=0.2
 min_node_cluster=5
 max_cluster_size=14
@@ -42,20 +42,17 @@ def contact_map(first,second,num_nodes):
 
 
 def spectral_cluster(G):
-    
-    num_nodes=len(list(G['x'])[0].numpy())
-    first=list(G['edge_index'])[0].numpy()[0]
-    second=list(G['edge_index'])[0].numpy()[1]
+    num_nodes=len(G['x'].numpy())
+    first=G['edge_index'].numpy()[0]
+    second=G['edge_index'].numpy()[1]
+
     A=contact_map(first,second,num_nodes)
     # diagonal matrix
     D = np.diag(A.sum(axis=1))
     # graph laplacian
     L = D-A
-
-
     # eigenvalues and eigenvectors
     vals, vecs = np.linalg.eig(L)
-
     # sort these based on the eigenvalues
     vecs = vecs[:,np.argsort(vals)]
     vals = vals[np.argsort(vals)]   
@@ -80,18 +77,16 @@ def spectral_cluster(G):
                         assymetry+=1.
                     total_count+=1.
         asy_degree=assymetry/total_count/n_cluster
-        #print('current number of clusters:', n_cluster, 'current asy degree: ',asy_degree)
         if asy_degree<best_asy:
             best_cluster=contact_cluster
             best_asy=asy_degree
             best_n_cluster=n_cluster
             best_node_label=kmeans.labels_
-    #print('best number of clusters: ',best_n_cluster, 'best degree of asymmetry: ',best_asy)
+
     final_cluster_num=max(best_node_label)+1
     final_cluster=[[] for x in range(final_cluster_num)]
 
     for node in range(num_nodes):
-        #print(node,best_node_label[node],final_cluster[best_node_label[node]])
         final_cluster[best_node_label[node]].append(node)
     return final_cluster
 
@@ -127,11 +122,11 @@ def find_dense_module(edge_per_node,m,part,A):
         return Q_list[-1],ave_node[-1],None
 
 def modularity_clustering(G):
-    G=nx.Graph(G)
     optimiser = la.Optimiser()
-    num_nodes=len(list(G['x'])[0].numpy())
-    first=list(G['edge_index'])[0].numpy()[0]
-    second=list(G['edge_index'])[0].numpy()[1]
+    num_nodes=len(G['x'].numpy())
+    first=G['edge_index'].numpy()[0]
+    second=G['edge_index'].numpy()[1]
+
     A=contact_map(first,second,num_nodes)
     G_ig = ig.Graph.Adjacency((A > 0).tolist())
     final_cluster=[]
@@ -150,13 +145,11 @@ def modularity_clustering(G):
                 best_c=c
                 best_Q=Q
                 best_ave_n_node=ave_n_node
-                #print(best_Q,best_ave_n_node,max_comm_size,best_c)
         for i in best_c:
             for j in best_c:
                 if G_ig.are_connected(i, j):
                     G_ig.delete_edges([(i,j)])
         final_cluster.append(best_c)
-
 
     node_in_cluster = list(chain.from_iterable(final_cluster))
     remove_list=list(set(node_in_cluster))
@@ -177,3 +170,17 @@ def modularity_clustering(G):
         final_cluster[np.argmax(bonds)].append(single)
     return final_cluster
 
+def modularity_clustering_simple(G):
+    num_nodes=len(G['x'].numpy())
+    first=G['edge_index'].numpy()[0]
+    second=G['edge_index'].numpy()[1]
+    A=contact_map(first,second,num_nodes)
+    G_ig = ig.Graph.Adjacency((A > 0).tolist())
+    max_comm_size=16
+    part = la.find_partition(G_ig, la.ModularityVertexPartition,max_comm_size=max_comm_size)
+    cluster=[]
+    for c in range(len(part)):
+        my_cluster=part[c]
+        cluster.append(my_cluster)
+
+    return cluster

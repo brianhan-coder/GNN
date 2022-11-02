@@ -77,9 +77,11 @@ if __name__ == '__main__':
             G = nx.read_gpickle(str(pdb_path)+'/'+str(my_protein)+".nx")
             graph_dataset.append(G)
 
+    #print(graph_dataset[0].edge_attr)
+
     ### train test partition
-    graph_dataset=GNN_core.balance_dataset(graph_dataset)
-    GNN_core.get_info_dataset(graph_dataset,verbose=True)
+    #graph_dataset=GNN_core.balance_dataset(graph_dataset)
+    #GNN_core.get_info_dataset(graph_dataset,verbose=True)
 
     assert(ratio[0]+ratio[1]+ratio[2]==1)
     part1 = int(len(graph_dataset)*ratio[0])
@@ -95,7 +97,8 @@ if __name__ == '__main__':
         model = GNN_core.GNN(hidden_channels,num_node_features=num_node_features,num_classes=num_classes,num_layers=num_layers)
     if arch == 'GTN':
         model = GNN_core.GTN(hidden_channels,num_node_features=num_node_features,num_classes=num_classes,num_layers=num_layers)
-    
+    if arch == 'GTN_c':
+        model = GNN_core.GTN_hybrid(hidden_channels,num_node_features=num_node_features,num_classes=num_classes,num_layers=num_layers,num_c_layers=num_c_layers)
     ### randomly initialize GCNConv model parameters
     #for layer in model.children():
     #    if isinstance(layer, GCNConv):
@@ -122,19 +125,34 @@ if __name__ == '__main__':
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
+    ### clustering
+    clustered_train_dataset=GNN_core.clustering_graph(train_dataset)
+    clustered_test_dataset=GNN_core.clustering_graph(test_dataset)
+    clustered_val_dataset=GNN_core.clustering_graph(val_dataset)
+    #print(f'Number of clustered training graphs: {len(clustered_train_dataset)}')
+    #print(f'Number of clustered test graphs: {len(clustered_test_dataset)}')
+    #print(f'Number of clustered val graphs: {len(clustered_val_dataset)}')
+    clustered_train_loader = [DataLoader(train_dataset, batch_size=batch_size, shuffle=False),DataLoader(clustered_train_dataset, batch_size=batch_size, shuffle=False)]
+    clustered_test_loader = [DataLoader(test_dataset, batch_size=batch_size, shuffle=False),DataLoader(clustered_test_dataset, batch_size=batch_size, shuffle=False)]
+    clustered_val_loader = [DataLoader(val_dataset, batch_size=batch_size, shuffle=False),DataLoader(clustered_val_dataset, batch_size=batch_size, shuffle=False)]
+
     best_val_acc = 0
     best_val_epoch = 0
     best_model=None
 
     ### training
     for epoch in range(1, int(n_epochs)):
-        GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion)
-        train_acc = GNN_core.test(model=model,loader=train_loader)
-        test_acc = GNN_core.test(model=model,loader=test_loader)     
-        test_loss=GNN_core.loss(model=model,loader=test_loader,criterion=criterion).item()
-        train_loss=GNN_core.loss(model=model,loader=train_loader,criterion=criterion).item()
-        this_val_acc = GNN_core.test(model=model,loader=val_loader)
+        #GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion)
+        #train_acc = GNN_core.test(model=model,loader=train_loader)
+        #test_acc = GNN_core.test(model=model,loader=test_loader)     
+        #test_loss=GNN_core.loss(model=model,loader=test_loader,criterion=criterion).item()
+        #train_loss=GNN_core.loss(model=model,loader=train_loader,criterion=criterion).item()
+        #this_val_acc = GNN_core.test(model=model,loader=val_loader)
 
+        GNN_core.train_hybrid(model=model,train_loader=clustered_train_loader,optimizer=optimizer,criterion=criterion)
+        train_acc = GNN_core.test_hybrid(model=model,loader=clustered_train_loader)
+        test_acc = GNN_core.test_hybrid(model=model,loader=clustered_test_loader)
+        this_val_acc = GNN_core.test_hybrid(model=model,loader=clustered_val_loader)
 
         if epoch %20==0:
             print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f},Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}')
@@ -150,12 +168,14 @@ if __name__ == '__main__':
         if patience_counter == args.patience:
             print("ran out of patience")
             break
-
-    trainscore = GNN_core.test(model=best_model,loader=train_loader)
-    testscore = GNN_core.test(model=best_model,loader=test_loader)
+        
+    trainscore = GNN_core.test_hybrid(model=best_model,loader=clustered_train_loader)
+    testscore = GNN_core.test_hybrid(model=best_model,loader=clustered_test_loader)
+    #trainscore = GNN_core.test(model=best_model,loader=train_loader)
+    #testscore = GNN_core.test(model=best_model,loader=test_loader)
     print(f'score on train set: {trainscore}')
     print(f'score on test set: {testscore}')
-    predict_test = GNN_core.predict(model=best_model,loader=test_loader)
+    #predict_test = GNN_core.predict(model=best_model,loader=test_loader)
 
     label_test=[]
     for data in test_loader:

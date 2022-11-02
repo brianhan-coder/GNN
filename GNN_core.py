@@ -6,12 +6,58 @@ import torch
 from torch_geometric.nn import GraphConv,TransformerConv,GCNConv
 import random
 import numpy as np
+import networkx as nx
 from os.path import exists
 import PDB2Graph
 from torch_geometric.data import Data
 from proteingraph.pin import pdb2df
 from proteingraph import read_pdb
-import GNN_core
+import GNN_clustering
+import time
+import copy
+
+class GTN_hybrid(torch.nn.Module):
+    def __init__(self, hidden_channels,num_node_features,num_classes,num_layers,num_c_layers):
+        super(GTN_hybrid, self).__init__()
+        torch.manual_seed(12345)
+        self.conv1 = TransformerConv(num_node_features, hidden_channels)
+        self.bn1 = torch.nn.BatchNorm1d(hidden_channels)
+
+        self.conv=torch.nn.ModuleList()
+        self.bn=torch.nn.ModuleList()
+        for l in range(int(num_layers)):
+            self.conv.append(TransformerConv(hidden_channels, hidden_channels))
+            self.bn.append(torch.nn.BatchNorm1d(hidden_channels))
+
+        self.conv_c=torch.nn.ModuleList()
+        self.bn_c=torch.nn.ModuleList()
+        for l in range(int(num_c_layers)):
+            self.conv_c.append(TransformerConv(hidden_channels, hidden_channels))
+            self.bn_c.append(torch.nn.BatchNorm1d(hidden_channels))
+
+        self.lin = Linear(hidden_channels, num_classes)
+
+    def forward(self, x, edge_index, batch):
+        x = self.conv1(x, edge_index[0])
+        x = self.bn1(x)
+        x = x.relu()
+
+        if len(self.conv_c) > 0:
+            for index,conv_c_i in enumerate(self.conv_c):
+                x = conv_c_i(x,edge_index[1])
+                x = self.bn_c[index](x)
+                x = x.relu()
+
+        if len(self.conv) > 0:
+            for index,conv_i in enumerate(self.conv):
+                x = conv_i(x,edge_index[0])
+                x = self.bn[index](x)
+                x = x.relu()
+        # 2. Readout layer
+        x = global_mean_pool(x, batch)  # [batch_size, hidden_channels]
+
+        x = self.lin(x)
+        return x
 
 class GTN(torch.nn.Module):
     def __init__(self, hidden_channels,num_node_features,num_classes,num_layers):
@@ -149,6 +195,19 @@ def get_activation(name):
         activation[name] = output.detach()
     return hook
 
+def train_hybrid(model,train_loader,optimizer,criterion):
+    model.train()
+    for data_old, data_new in zip(train_loader[0], train_loader[1]):
+        #model.conv1.register_forward_hook(get_activation('conv3'))
+
+        data_tmp=copy.copy(data_old)
+        data_tmp.edge_index=[data_old.edge_index,data_new.edge_index]
+
+        out = model(data_tmp.x, data_tmp.edge_index, data_tmp.batch)  # Perform a single forward pass.
+        loss = criterion(out, data_tmp.y)  # Compute the loss.
+        loss.backward()  # Derive gradients.
+        optimizer.step()  # Update parameters based on gradients.
+        optimizer.zero_grad()  # Clear gradients.
 
 def train(model,train_loader,optimizer,criterion):
     model.train()
@@ -160,6 +219,17 @@ def train(model,train_loader,optimizer,criterion):
         loss.backward()  # Derive gradients.
         optimizer.step()  # Update parameters based on gradients.
         optimizer.zero_grad()  # Clear gradients.
+
+def test_hybrid(model,loader):
+    model.eval()
+    correct = 0
+    for data_old, data_new in zip(loader[0],loader[1]):
+        data_tmp=copy.copy(data_old)
+        data_tmp.edge_index=[data_old.edge_index,data_new.edge_index]
+        out = model(data_tmp.x, data_tmp.edge_index, data_tmp.batch)  # Perform a single forward pass.
+        pred = out.argmax(dim=1)
+        correct += int((pred == data_tmp.y).sum())  # Check against ground-truth labels.
+    return correct / len(loader[0].dataset)
 
 def test(model,loader):
     model.eval()
@@ -227,7 +297,6 @@ def balance_dataset(dataset):
 
 
 def convert_pdb2graph(input):
- 
     pdb_path=input[0]
     my_protein=input[1]
     featureData=input[2]
@@ -262,7 +331,6 @@ def convert_pdb2graph(input):
             print("Can't load ",str(my_protein))
             return
 
-        
     ### readin feature list of all amino acids
         try:
             complete_list_feature=[]
@@ -280,3 +348,31 @@ def convert_pdb2graph(input):
             print("Failed loading aminoacids info for ",str(my_protein))
             return
 
+def clustering_graph(dataset):
+    clustered_dataset=[]
+    old=[]
+    new=[]
+    t0 = time.time()
+    for i,G in enumerate(dataset):
+        G_tmp=copy.copy(G)
+        #my_cluster=GNN_clustering.spectral_cluster(G)
+        my_cluster=GNN_clustering.modularity_clustering_simple(G)
+
+        edges=G['edge_index'].numpy().T
+        to_remove=[]
+        for index,edge in enumerate(edges):
+            found=0
+            for c in my_cluster:
+                if edge[0] in c and edge[1] in c:
+                    found=1
+                    break
+            if found==0:
+                to_remove.append(index)
+        edges=np.delete(edges,obj=to_remove, axis=0)
+        t = torch.from_numpy(edges.T)
+        G_tmp['edge_index']=t
+        new.append(G_tmp)
+        old.append(G)
+    t1 = time.time()
+    clustered_dataset=new
+    return clustered_dataset
