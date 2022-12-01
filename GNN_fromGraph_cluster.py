@@ -18,23 +18,20 @@ from sklearn.metrics import confusion_matrix, roc_curve, auc
 parser = argparse.ArgumentParser(description="Simulate a GNN with the appropriate hyperparameters.")
 parser.add_argument('-d','--dataset', required=True, help='the protein dataset')
 parser.add_argument('--graph_path', required=True, help='path to the graph files')
-parser.add_argument('-r','--training_ratio', required=False, help='path to the pdb files',default=0.7)
-parser.add_argument('--partition_ratio', required=False, type=str, help="governs the ration of partition sizes in the training, validation, and test sets. a list of the form [train, val, test]", default="0.4:0.3:0.3")
+parser.add_argument('-r','--partition_ratio', required=False, type=str, help="governs the ration of partition sizes in the training, validation, and test sets. a list of the form [train, val, test]", default="0.4:0.3:0.3")
 parser.add_argument('--partition_size', required=False, help='sets partition size for the total size of dataset', default='max')
-parser.add_argument('-e','--epochs', required=False, help='number of training epochs', default='1001')
+parser.add_argument('-e','--epochs', required=False, help='number of training epochs', default='401')
 parser.add_argument('-n','--num_layers', required=False, help='number of additional layers, basic architecture has three', default='3')
 parser.add_argument('-nc','--num_c_layers', required=False, help='number of clustered layers', default='3')
 parser.add_argument('-p','--patience', required=False, type=int, help='upper limit for the patience counter used in validation', default=20)
 parser.add_argument('-b','--batch_size', required=False, type=int, help='batch size for training, testing and validation', default=40)
 parser.add_argument('-l','--learning_rate', required=False, type=float, help='initial learning rate', default=0.01)
-parser.add_argument('-m','--model_type', required=False, type=str, help='the underlying model of the neural network', default='GTN')
+parser.add_argument('-m','--model_type', required=False, type=str, help='the underlying model of the neural network', default='GTN_c')
 parser.add_argument('-c','--hidden_channel', required=False, type=int, help='width of hidden layers', default=12)
 
 args = parser.parse_args()
 protein_dataset=args.dataset
 pdb_path=args.graph_path
-partition_ratio=args.training_ratio
-partition_size=args.partition_size
 lr=args.learning_rate
 n_epochs=args.epochs
 arch=args.model_type
@@ -44,11 +41,8 @@ batch_size=args.batch_size
 num_layers=args.num_layers
 num_c_layers=args.num_c_layers
 hidden_channels=args.hidden_channel
-if partition_size != 'max':
-    parition_size = int(partition_size)
 
 ### load proteins
-
 proteins=[]
 graph_labels=[]
 with open(protein_dataset, "r") as file:
@@ -62,26 +56,20 @@ tmp = list(zip(proteins, graph_labels))
 random.shuffle(tmp)
 proteins, graph_labels = zip(*tmp)
 proteins, graph_labels = list(proteins), list(graph_labels)
-if partition_size != 'max':
-    proteins=proteins[:int(partition_size)]
-    graph_labels=graph_labels[:int(partition_size)]
-
-
+if args.partition_size != 'max':
+    proteins=proteins[:int(args.partition_size)]
+    graph_labels=graph_labels[:int(args.partition_size)]
 
 if __name__ == '__main__':
     ### parallel converting PDB to graphs 
-    proteins[0]='3W06'
     graph_dataset=[]
     for protein_index,my_protein in enumerate(proteins):
         if os.path.exists(str(pdb_path)+'/'+str(my_protein)+".nx"):
             G = nx.read_gpickle(str(pdb_path)+'/'+str(my_protein)+".nx")
             graph_dataset.append(G)
 
-    #print(graph_dataset[0].edge_attr)
-
-    ### train test partition
-    #graph_dataset=GNN_core.balance_dataset(graph_dataset)
-    #GNN_core.get_info_dataset(graph_dataset,verbose=True)
+    graph_dataset=GNN_core.balance_dataset(graph_dataset)
+    GNN_core.get_info_dataset(graph_dataset,verbose=True)
 
     assert(ratio[0]+ratio[1]+ratio[2]==1)
     part1 = int(len(graph_dataset)*ratio[0])
@@ -99,14 +87,7 @@ if __name__ == '__main__':
         model = GNN_core.GTN(hidden_channels,num_node_features=num_node_features,num_classes=num_classes,num_layers=num_layers)
     if arch == 'GTN_c':
         model = GNN_core.GTN_hybrid(hidden_channels,num_node_features=num_node_features,num_classes=num_classes,num_layers=num_layers,num_c_layers=num_c_layers)
-    ### randomly initialize GCNConv model parameters
-    #for layer in model.children():
-    #    if isinstance(layer, GCNConv):
-    #        dic = layer.state_dict()
-    #        for k in dic:
-    #            dic[k] = torch.randn(dic[k].size())
-    #        layer.load_state_dict(dic)
-    #        del(dic)
+
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=200, gamma=0.0001)
     criterion = torch.nn.CrossEntropyLoss()
@@ -115,7 +96,6 @@ if __name__ == '__main__':
     train_dataset = graph_dataset[:part1]
     test_dataset = graph_dataset[part1:part2]
     val_dataset = graph_dataset[part2:]
-
 
     print(f'Number of training graphs: {len(train_dataset)}')
     print(f'Number of test graphs: {len(test_dataset)}')
@@ -129,9 +109,7 @@ if __name__ == '__main__':
     clustered_train_dataset=GNN_core.clustering_graph(train_dataset)
     clustered_test_dataset=GNN_core.clustering_graph(test_dataset)
     clustered_val_dataset=GNN_core.clustering_graph(val_dataset)
-    #print(f'Number of clustered training graphs: {len(clustered_train_dataset)}')
-    #print(f'Number of clustered test graphs: {len(clustered_test_dataset)}')
-    #print(f'Number of clustered val graphs: {len(clustered_val_dataset)}')
+
     clustered_train_loader = [DataLoader(train_dataset, batch_size=batch_size, shuffle=False),DataLoader(clustered_train_dataset, batch_size=batch_size, shuffle=False)]
     clustered_test_loader = [DataLoader(test_dataset, batch_size=batch_size, shuffle=False),DataLoader(clustered_test_dataset, batch_size=batch_size, shuffle=False)]
     clustered_val_loader = [DataLoader(val_dataset, batch_size=batch_size, shuffle=False),DataLoader(clustered_val_dataset, batch_size=batch_size, shuffle=False)]
@@ -142,17 +120,14 @@ if __name__ == '__main__':
 
     ### training
     for epoch in range(1, int(n_epochs)):
-        #GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion)
-        #train_acc = GNN_core.test(model=model,loader=train_loader)
-        #test_acc = GNN_core.test(model=model,loader=test_loader)     
-        #test_loss=GNN_core.loss(model=model,loader=test_loader,criterion=criterion).item()
-        #train_loss=GNN_core.loss(model=model,loader=train_loader,criterion=criterion).item()
-        #this_val_acc = GNN_core.test(model=model,loader=val_loader)
 
         GNN_core.train_hybrid(model=model,train_loader=clustered_train_loader,optimizer=optimizer,criterion=criterion)
         train_acc = GNN_core.test_hybrid(model=model,loader=clustered_train_loader)
         test_acc = GNN_core.test_hybrid(model=model,loader=clustered_test_loader)
         this_val_acc = GNN_core.test_hybrid(model=model,loader=clustered_val_loader)
+
+        test_loss=GNN_core.loss_hybrid(model=model,loader=clustered_test_loader,criterion=criterion).item()
+        train_loss=GNN_core.loss_hybrid(model=model,loader=clustered_train_loader,criterion=criterion).item()
 
         if epoch %20==0:
             print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f},Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}')
@@ -171,11 +146,10 @@ if __name__ == '__main__':
         
     trainscore = GNN_core.test_hybrid(model=best_model,loader=clustered_train_loader)
     testscore = GNN_core.test_hybrid(model=best_model,loader=clustered_test_loader)
-    #trainscore = GNN_core.test(model=best_model,loader=train_loader)
-    #testscore = GNN_core.test(model=best_model,loader=test_loader)
+ 
     print(f'score on train set: {trainscore}')
     print(f'score on test set: {testscore}')
-    #predict_test = GNN_core.predict(model=best_model,loader=test_loader)
+    predict_test = GNN_core.predict_hybrid(model=best_model,loader=clustered_test_loader)
 
     label_test=[]
     for data in test_loader:

@@ -4,13 +4,20 @@ from platform import architecture
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 import numpy as np
 import torch
-from torch_geometric.loader import DataLoader
+import torch.nn as nn
+import torch.nn.functional as F
+from torch_geometric.data import Data
+import torch_geometric.nn as geom_nn
+from torch_geometric.nn import GCNConv
 import networkx as nx
+import feature_embedding
+import PDB2Graph
 import GNN_core
 import argparse
 import random
 from os.path import exists
 from multiprocessing import Pool
+import multiprocessing
 import torch.optim as optim
 import copy
 from sklearn.metrics import confusion_matrix, roc_curve, auc
@@ -22,8 +29,7 @@ parser.add_argument('-r','--training_ratio', required=False, help='path to the p
 parser.add_argument('--partition_ratio', required=False, type=str, help="governs the ration of partition sizes in the training, validation, and test sets. a list of the form [train, val, test]", default="0.4:0.3:0.3")
 parser.add_argument('--partition_size', required=False, help='sets partition size for the total size of dataset', default='max')
 parser.add_argument('-e','--epochs', required=False, help='number of training epochs', default='1001')
-parser.add_argument('-n','--num_layers', required=False, help='number of additional layers, basic architecture has three', default='3')
-parser.add_argument('-nc','--num_c_layers', required=False, help='number of clustered layers', default='3')
+parser.add_argument('-n','--num_layers', required=False, help='number of additional layers, basic architecture has three', default='0')
 parser.add_argument('-p','--patience', required=False, type=int, help='upper limit for the patience counter used in validation', default=20)
 parser.add_argument('-b','--batch_size', required=False, type=int, help='batch size for training, testing and validation', default=40)
 parser.add_argument('-l','--learning_rate', required=False, type=float, help='initial learning rate', default=0.01)
@@ -42,7 +48,6 @@ ratio = args.partition_ratio.split(":")
 ratio = [float(entry) for entry in ratio]
 batch_size=args.batch_size
 num_layers=args.num_layers
-num_c_layers=args.num_c_layers
 hidden_channels=args.hidden_channel
 if partition_size != 'max':
     parition_size = int(partition_size)
@@ -67,24 +72,40 @@ if partition_size != 'max':
     graph_labels=graph_labels[:int(partition_size)]
 
 
-
 if __name__ == '__main__':
     ### parallel converting PDB to graphs 
-    proteins[0]='3W06'
     graph_dataset=[]
     for protein_index,my_protein in enumerate(proteins):
         if os.path.exists(str(pdb_path)+'/'+str(my_protein)+".nx"):
             G = nx.read_gpickle(str(pdb_path)+'/'+str(my_protein)+".nx")
             graph_dataset.append(G)
 
+    #print(graph_dataset[0].edge_attr)
+
     ### train test partition
     graph_dataset=GNN_core.balance_dataset(graph_dataset)
     GNN_core.get_info_dataset(graph_dataset,verbose=True)
 
+    #train_test_partition=int(partition_ratio*len(graph_dataset))
     assert(ratio[0]+ratio[1]+ratio[2]==1)
     part1 = int(len(graph_dataset)*ratio[0])
     part2 = part1 + int(len(graph_dataset)*ratio[1])
     part3 = part2 + int(len(graph_dataset)*ratio[2])
+
+    train_dataset = graph_dataset[:part1]
+    test_dataset = graph_dataset[part1:part2]
+    val_dataset = graph_dataset[part2:]
+
+    print(f'Number of training graphs: {len(train_dataset)}')
+    print(f'Number of test graphs: {len(test_dataset)}')
+    print(f'Number of val graphs: {len(val_dataset)}')
+
+    ### mini-batching of graphs, adjacency matrices are stacked in a diagonal fashion. Batching multiple graphs into a single giant graph
+
+    from torch_geometric.loader import DataLoader
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     ### core GNN 
     num_node_features=len(graph_dataset[0].x[0])
     num_classes=2
@@ -95,32 +116,17 @@ if __name__ == '__main__':
         model = GNN_core.GNN(hidden_channels,num_node_features=num_node_features,num_classes=num_classes,num_layers=num_layers)
     if arch == 'GTN':
         model = GNN_core.GTN(hidden_channels,num_node_features=num_node_features,num_classes=num_classes,num_layers=num_layers)
-    
     ### randomly initialize GCNConv model parameters
-    #for layer in model.children():
-    #    if isinstance(layer, GCNConv):
-    #        dic = layer.state_dict()
-    #        for k in dic:
-    #            dic[k] = torch.randn(dic[k].size())
-    #        layer.load_state_dict(dic)
-    #        del(dic)
+    for layer in model.children():
+        if isinstance(layer, GCNConv):
+            dic = layer.state_dict()
+            for k in dic:
+                dic[k] = torch.randn(dic[k].size())
+            layer.load_state_dict(dic)
+            del(dic)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=200, gamma=0.0001)
     criterion = torch.nn.CrossEntropyLoss()
-
-    ### mini-batching of graphs, adjacency matrices are stacked in a diagonal fashion. Batching multiple graphs into a single giant graph
-    train_dataset = graph_dataset[:part1]
-    test_dataset = graph_dataset[part1:part2]
-    val_dataset = graph_dataset[part2:]
-
-
-    print(f'Number of training graphs: {len(train_dataset)}')
-    print(f'Number of test graphs: {len(test_dataset)}')
-    print(f'Number of val graphs: {len(val_dataset)}')
-
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     best_val_acc = 0
     best_val_epoch = 0
@@ -128,14 +134,15 @@ if __name__ == '__main__':
 
     ### training
     for epoch in range(1, int(n_epochs)):
+  
         GNN_core.train(model=model,train_loader=train_loader,optimizer=optimizer,criterion=criterion)
         train_acc = GNN_core.test(model=model,loader=train_loader)
-        test_acc = GNN_core.test(model=model,loader=test_loader)     
+        test_acc = GNN_core.test(model=model,loader=test_loader)
+        
         test_loss=GNN_core.loss(model=model,loader=test_loader,criterion=criterion).item()
         train_loss=GNN_core.loss(model=model,loader=train_loader,criterion=criterion).item()
+
         this_val_acc = GNN_core.test(model=model,loader=val_loader)
-
-
         if epoch %20==0:
             print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f},Train loss: {train_loss:.4f}, Test loss: {test_loss:.4f}')
 
@@ -150,13 +157,12 @@ if __name__ == '__main__':
         if patience_counter == args.patience:
             print("ran out of patience")
             break
-
+        
     trainscore = GNN_core.test(model=best_model,loader=train_loader)
     testscore = GNN_core.test(model=best_model,loader=test_loader)
     print(f'score on train set: {trainscore}')
     print(f'score on test set: {testscore}')
     predict_test = GNN_core.predict(model=best_model,loader=test_loader)
-
     label_test=[]
     for data in test_loader:
         label_test.append(data.y.tolist())

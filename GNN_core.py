@@ -53,6 +53,8 @@ class GTN_hybrid(torch.nn.Module):
                 x = conv_i(x,edge_index[0])
                 x = self.bn[index](x)
                 x = x.relu()
+
+
         # 2. Readout layer
         x = global_mean_pool(x, batch)  # [batch_size, hidden_channels]
 
@@ -240,6 +242,16 @@ def test(model,loader):
         correct += int((pred == data.y).sum())  # Check against ground-truth labels.
     return correct / len(loader.dataset)  # Derive ratio of correct predictions.
 
+def predict_hybrid(model,loader):
+    model.eval()
+    pred=[]
+    for data_old, data_new in zip(loader[0],loader[1]):
+        data_tmp=copy.copy(data_old)
+        data_tmp.edge_index=[data_old.edge_index,data_new.edge_index]
+        out = model(data_tmp.x, data_tmp.edge_index, data_tmp.batch)  # Perform a single forward pass.
+        pred.append(out.argmax(dim=1).tolist())
+    return pred
+
 def predict(model,loader):
     model.eval()
     pred=[]
@@ -248,6 +260,17 @@ def predict(model,loader):
         pred.append(out.argmax(dim=1).tolist())  # Use the class with highest probability.
           # Check against ground-truth labels.
     return pred  # Derive ratio of correct predictions.
+
+def loss_hybrid(model,loader,criterion):
+    model.eval()
+    loss=0.
+    for data_old, data_new in zip(loader[0], loader[1]):
+        data_tmp=copy.copy(data_old)
+        data_tmp.edge_index=[data_old.edge_index,data_new.edge_index]
+        out = model(data_tmp.x, data_tmp.edge_index, data_tmp.batch)  # Perform a single forward pass.
+        loss = criterion(out, data_tmp.y).sum()
+
+    return loss/len(loader[0].dataset)
 
 def loss(model,loader,criterion):
     model.eval()
@@ -348,15 +371,42 @@ def convert_pdb2graph(input):
             print("Failed loading aminoacids info for ",str(my_protein))
             return
 
-def clustering_graph(dataset):
+def clustering_graph(dataset,proteins):
+    predetermined_cluster=True
+    if predetermined_cluster==True:
+        cluster_map={}
+        with open('data_base/dataAll_cluster.dat', "r") as file:
+            content = file.read()
+        for line in content.splitlines():
+            line=list(line.split(":"))
+            cluster_map[line[0]]=line[1]
+
     clustered_dataset=[]
     old=[]
     new=[]
     t0 = time.time()
     for i,G in enumerate(dataset):
         G_tmp=copy.copy(G)
-        #my_cluster=GNN_clustering.spectral_cluster(G)
-        my_cluster=GNN_clustering.modularity_clustering_simple(G)
+
+        if predetermined_cluster==True:
+            no_existing_map=0
+            my_cluster=[]
+            protein_idx=G['prot_idx']
+            prot_id=proteins[protein_idx]
+            if prot_id in cluster_map and cluster_map[prot_id]!='None':
+                my_cluster_tmp=cluster_map[prot_id]
+                cluster_tmp=list(my_cluster_tmp.split(";"))
+                for tmp in cluster_tmp:
+                    group=[]
+                    for member in tmp.split(","):
+                        group.append(int(member))
+                    my_cluster.append(group)
+            else:
+                no_existing_map+=1
+                my_cluster=[list(range(len(G['x'])))]
+        else:
+            #my_cluster=GNN_clustering.spectral_cluster(G)
+            my_cluster=GNN_clustering.modularity_clustering_simple(G)
 
         edges=G['edge_index'].numpy().T
         to_remove=[]

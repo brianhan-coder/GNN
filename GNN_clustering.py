@@ -184,3 +184,5 @@ def modularity_clustering_simple(G):
         cluster.append(my_cluster)
 
     return cluster
+
+
