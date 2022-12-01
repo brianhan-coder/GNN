@@ -42,17 +42,19 @@ class GTN_hybrid(torch.nn.Module):
         x = self.bn1(x)
         x = x.relu()
 
+        if len(self.conv) > 0:
+            for index,conv_i in enumerate(self.conv):
+                x = conv_i(x,edge_index[0])
+                x = self.bn[index](x)
+                x = x.relu()
+
         if len(self.conv_c) > 0:
             for index,conv_c_i in enumerate(self.conv_c):
                 x = conv_c_i(x,edge_index[1])
                 x = self.bn_c[index](x)
                 x = x.relu()
 
-        if len(self.conv) > 0:
-            for index,conv_i in enumerate(self.conv):
-                x = conv_i(x,edge_index[0])
-                x = self.bn[index](x)
-                x = x.relu()
+
 
 
         # 2. Readout layer
