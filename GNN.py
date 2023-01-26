@@ -18,10 +18,11 @@ from multiprocessing import Pool
 import multiprocessing
 
 
+#创建输入命令
 parser = argparse.ArgumentParser(description="Simulate a GNN with the appropriate hyperparameters.")
 parser.add_argument('-d','--dataset', required=True, help='the protein dataset')
-parser.add_argument('--pdb_path', required=True, help='path to the pdb files')
-parser.add_argument('-r','--training_ratio', required=False, help='path to the pdb files',default=0.7)
+parser.add_argument('--pdb_path', required=True, help='path to the pdb files')#PDB？
+parser.add_argument('-r','--training_ratio', required=False, help='path to the pdb files',default=0.7)#parameter
 parser.add_argument('--partition_size', required=False, help='sets partition size for the total size of dataset', default='max')
 parser.add_argument('-e','--epochs', required=False, help='number of training epochs', default='10')
 args = parser.parse_args()
@@ -33,7 +34,7 @@ n_epochs=args.epochs
 if partition_size != 'max':
     parition_size = int(partition_size)
 
-gnn_layer_by_name = {"GCN": geom_nn.GCNConv, "GAT": geom_nn.GATConv, "GraphConv": geom_nn.GraphConv}
+gnn_layer_by_name = {"GCN": geom_nn.GCNConv, "GAT": geom_nn.GATConv, "GraphConv": geom_nn.GraphConv}#函数索引
 
 ### loading features
 
