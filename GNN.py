@@ -70,6 +70,8 @@ if partition_size != 'max':
 
 if __name__ == '__main__':
     ### parallel converting PDB to graphs 
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') #Device Info
+    
     input_list=[]
     for protein_index,my_protein in enumerate(proteins):
         input_list.append([pdb_path,my_protein,featureData,graph_labels,protein_index])
